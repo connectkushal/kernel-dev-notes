@@ -5,4 +5,4 @@ NOTE: As im a beginner in this field, please double check all info from this rep
 
 Starting with 
 - [A Journey in Creating an Operating System Kernel - The 539 Kernel Book](https://539kernel.com/)
-- [Making an OS (x86)] (https://www.youtube.com/playlist?list=PLm3B56ql_akNcvH8vvJRYOc7TbYhRs19M)
+- [Making an OS (x86)](https://www.youtube.com/playlist?list=PLm3B56ql_akNcvH8vvJRYOc7TbYhRs19M)
