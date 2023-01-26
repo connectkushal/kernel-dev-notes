@@ -26,8 +26,6 @@
 
 ---
 *Additional Notes*
-1) `sudo apt install nasm` to install nasm
-2) GNU Assembler(GAS) is another alternative
+1) GNU Assembler(GAS) is another alternative
+2) Pentium 4 for instance supports 32 bit architecture, Intel 8086 does not, as it is a 16bit architecture.
 3) See study material list for x86 architecture tutorials
-4) Pentium 4 for instance supports 32 bit architecture, Intel 8086 does not, as it is a 16bit architecture.
-5) 
