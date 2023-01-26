@@ -1,5 +1,5 @@
 # Operating System and Kernel Development Notes
-- Repo with revision notes and collection of links to books, youtube tutorials, etc related to kernel development.
+- Repo with revision notes and collection of links to books, youtube tutorials, etc related to os and kernel development.
 - I will be updating the list below as and when i go through any new material.
 
 NOTE: As im a beginner in this field, please double check all info from this repo before any usage. Kindly send a pr for errors.
