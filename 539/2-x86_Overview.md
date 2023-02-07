@@ -29,10 +29,10 @@
 - Another property of general-purpose operating systems is that to allow the user to run any software from unknown sources which means that these software cannot be trusted, they may contain code that intentionally or even unintentionally breach the security of the system or cause the system to crash. 
 
 - Due to these two properties of modern general-purpose operating systems, the overall system needs to be protected from multiple actions. 
-  - **First**, either in multitasking or monotasking environment (where the user of the operating system can only run one process at a given time. eg DOS), the kernel of the operating system which is the most sensitive part of the system, should be protected from current processes, 
+  - **First**, either in multitasking or monotasking environment (where the user of the operating system can only run one process at a given time. eg DOS), the kernel of the operating system, should be protected from current processes, 
     - no process should be able to access any part of the kernel's memory either by reading from it or writing to it, 
     - also, no process should be able to call any of kernel's code without kernel's consent. 
-  - **Second**, the sensitive instructions and registers that change the behavior of the processor (e.g. switching from real-mode to protected-mode) should be only allowed for the kernel which is the most privileged component of the system, otherwise, the stability of the system will be in danger.
+  - **Second**, the sensitive instructions and registers that change the behavior of the processor (e.g. switching from real-mode to protected-mode) should be only allowed for the kernel for system stability.
   - **Third**, in multitasking environment the running processes should be protected from each other in the same way the kernel is protected from them, no process should interfere with another.
 
 - In x86, the **segmentation** mechanism provided a logical view of memory in real-mode and it has been extended in protected-mode to provide the needed protection which has been described in the third point,
@@ -45,16 +45,13 @@
   - The kernel runs on kernel-mode, and has the privilege to do anything (e.g. access any memory location, access any resource of the system and perform any operation), 
   - while the user applications run on user-mode which is a restricted environment where the code that runs on doesn't have the privilege to perform sensitive actions.
   - This kind of separation has been realized through privilege levels in x86 which provides **four privilege levels** numbered from `0` to `3`.
-  -  The privilege level `0` is the most privileged level which can be used to realize the kernel-mode while the privilege level `3` is the least privileged which can be used to realize the user-mode. 
-  - For privilege levels `1` and `2` it's up to the kernel's designer to use them or not, some kernel designs suggest to use these levels for device drivers.
-  - According to Intel's manual, if the kernel's design uses only two privilege levels, that is, a kernel-mode and user-mode, then the privilege level `0` and `3` should be used and not for example `0` and `1`.
+    - level `0` is most privileged level which can be used to realize the kernel-mode while level `3` is least privileged which can be used to realize the user-mode. 
+  - For levels `1` and `2` it's up to the kernel's designer to use them or not, some kernel designs suggest to use these levels for device drivers.
+  - According to Intel's manual, if the kernel's design uses only two privilege levels, that is, a kernel-mode and user-mode, then the privilege level `0` and `3` should be used.
+  - the privilege levels prevent user processes (the processes which runs on privilege level greater than `0`), from executing **privileged instructions**, protecting kernel's data from being accessed by user processes
+    - eg, loading `GDT` register by using the instruction `lgdt` as we will see later in this chapter.
 
-- In addition to protecting the kernel's code from being called without its consent and protecting kernel's data from being accessed by user processes (as both required by first point above), 
-  - the privilege levels also prevent user processes [That is, the processes which runs on privilege level greater than `0`] from executing *privileged instructions* (as required by second point above), 
-  - only the code which runs in the privilege level `0`, that is, the kernel, will be able to execute these instructions since they could manipulate sensitive parts of the processor's environment that only the kernel should maintain. 
-    - For example, loading `GDT` register by using the instruction `lgdt` as we will see later in this chapter.
-
-- When a system uses different privilege levels to run, as in most modern operating systems, the x86 processor maintains what is called *current privilege level* (CPL) which is, as its name suggests, the current privilege level of the currently running code.
+- When a system uses different privilege levels, as in most modern operating systems, the x86 processor maintains what is called **current privilege level (CPL)**.
   - For example, if the currently running code belongs to the kernel then the current privilege level will be `0` and according to it, the processor is going to decide allowed operations. 
   - In other words, the processor keeps tracking the current state of the currently running system and one of the information in this state is in which privilege level (or mode) the system is currently running.
 
@@ -110,32 +107,53 @@ It is too long and it will be tedious to work with, and for that the hexadecimal
 Table: An Example of How Zero to Fifteen are Represented in the Three Numbering Systems.
 
 ## The Basic View of Memory
-The basic view of the main memory is that it is an *array of cells*, each cell has the ability to store one byte and it is reachable by a unique number called *memory address* ^[The architecture which each memory address points to `1 byte` is known as *byte-addressable architecture* or *byte machines*. It is the most common architecture. Of course, other architectures are possible, such as *word-addressable architecture* or *word machines*.], the range of memory addresses starts from `0` to some limit `x`, for example, if the system has `1MB` of *physical* main memory, then the last memory address in the range will be `1023`, as we know, `1MB` = `1024 bytes` and since the range starts from `0` and not `1`, then the last memory address in this case is `1023` and not `1024`. This range of memory addresses is known as *address space* and it can be a *physical address space* which is limited by the physical main memory or a *logical address space*. A well-known example of using logical address space that we will discuss in a latter chapter is *virtual memory* which provides a logical address space of size `4GB` in `32-bit` architecture even if the actual size of physical main memory is less than `4GB`. However, The address space starts from the memory address `0`, which is the index of the first cell (byte) of the memory, and it increases by `1`, so the memory address `1` is the index of the second cell of the memory, `2` is the index of third cell of memory and so on. Viewing the memory as an array of contiguous cells is also known as *flat memory model*.
+- The basic view of the main memory is that it is an *array of cells*, each cell has the ability to store **one byte** and it is reachable by a unique number called **memory address** 
+  - The architecture which each memory address points to `1 byte` is known as *byte-addressable architecture* or *byte machines*. 
+  - It is the most common architecture.
+  - Other architectures are possible, such as *word-addressable architecture* or *word machines*. 
+- Range of memory addresses starts from `0` to some limit `x`,
+  - eg, if the system has `1MB` of *physical* main memory, then the last memory address in the range will be `1023`.
+- This range of memory addresses is known as **address space** and it can be a **physical address space** which is limited by the physical main memory or a **logical address space**.
+  - When we say *physical* we mean the actual hardware
+- A well-known example of using logical address space is **virtual memory** which provides a logical address space of size `4GB` in `32-bit` architecture even if the actual size of physical main memory is less than `4GB`.
+- Viewing the memory as an array of contiguous cells is also known as **flat memory model**.
+ - When the maximum capacity of the hardware of the main memory (RAM) is `1MB` then the physical address space of the machine is up to `1MB`. On the other hand, *logical*  doesn't necessarily represents or obeys the way the actual hardware works on. 
+   - To make the *logical* view of anything works, it should be mapped into the real *physical* view, that is, it should be somehow translated for the physical hardware to be understood, this mapping is handled by the software or sometimes special parts of the hardware.
 
-![The Physical View of the Memory. The Size of it is `n` Bytes.](Figures/x86-ch/memory-physical-view.png){#fig:memory_physical_view width=75%}
+- the memory address is just a numerical value, a number. 
+  - When discussing the memory address as a mere number in the following chapters, it will be call it *memory address value* or *the value of memory address*, 
+  - while the term *memory address* keeps its meaning, which is a unique identifier that refers to a specific location (cell) in the main memory.
 
-When we say *physical* we mean the actual hardware, that is, when the maximum capacity of the hardware of the main memory (RAM) is `1MB` then the physical address space of the machine is up to `1MB`. On the other hand, when we say *logical* that means it doesn't necessarily represents or obeys the way the actual hardware works on, instead it is a hypothetical way of something that doesn't exist in the real world (the hardware). To make the *logical* view of anything works, it should be mapped into the real *physical* view, that is, it should be somehow translated for the physical hardware to be understood, this mapping is handled by the software or sometimes special parts of the hardware.
+- The values of memory addresses are used by the processor to be able to perform its job, 
+  - when processor is executing some instructions that involve the main memory (e.g. reading a content from some memory location or dealing with program counter), the related values of memory addresses are stored temporarily on the registers of the processor, 
+  - due to that, the length of a memory address value is bounded to the size of the processor's registers,
+    - so, in `32-bit` environments, where the size of the registers is usually `32-bit`, the length of the memory address value is **always** `32` bits,
+    - eg , assume the memory address value `1`, when it is stored (and handled) by the `32-bit` processor, it will be stored as the following sequence of bits.
 
-Now, for the following discussion, let me remind you that the memory address is just a numerical value, it is just a number. When I discuss the memory address as a mere number I call it *memory address value* or *the value of memory address*, while the term *memory address* keeps its meaning, which is a unique identifier that refers to a specific location (cell) in the main memory.
+      ```{.c}
+      00000000 00000000 00000000 00000001
+      ```
+    - the value `1` has been represented in exactly `32` bits, appending zeros to the left doesn't change the value itself, it is similar to writing a number as `0000539` which is exactly `539`.
 
-The values of memory addresses are used by the processor all the time to be able to perform its job, and when it is executing some instructions that involve the main memory (e.g. reading a content from some memory location or dealing with program counter), the related values of memory addresses are stored temporarily on the registers of the processor, due to that, the length of a memory address value is bounded to the size of the processor's registers, so, in `32-bit` environments, where the size of the registers is usually `32-bit`, the length of the memory address value is **always** `32` bits, why am I stressing "always" here? Because even if less than `32` bits is enough to represent the memory address value, it will be represented in `32` bits though, for example, assume the memory address value `1`, in binary, the value `1` can be represented by only `1 bit` and no more, but in reality, when it is stored (and handled) by the `32-bit` processor, it will be stored as the following sequence of bits.
-
-```{.c}
-00000000 00000000 00000000 00000001
-```
-
-As you can see, the value `1` has been represented in exactly `32` bits, appending zeros to the left doesn't change the value itself, it is similar to writing a number as `0000539` which is exactly `539`.
-
-It has been mentioned earlier that the register size that stores the values of memory address in order to deal with memory contents affects the available size of main memory for the system. Take for example the instruction pointer register, if its size, say, `16` bits then the maximum available memory for code will be `64KB` (`64` KB = `65536` Bytes / `1024`) since it is the last reachable memory address by the processor for fetching an instruction. What if the size of the instruction pointer register is `32` bits, then the maximum available memory for code will be `4GB`. Why is that? 
-
-To answer this question let's work with decimal numbers first. If I tell you that you have five blanks, what is the largest decimal number you can represent in these five blanks? the answer is `99999d`. In the same manner, if you have `5` blanks, what is the largest binary number you can represent in these 5 blanks? it is `11111b` which is equivalent to `31d`, the same holds true for the registers that store the value of memory addresses, given the size of such register is `16` bits, then there is `16` blanks, and the largest binary number that can be represented in those `16` blanks is `11111111 11111111b` or in hexadecimal `FF FFh`, which is equivalent to `65535d`, that means the last byte a register of size `16` bits can refer to is the byte number `65535d` because it is the largest value this register can store and no more, which leads to the maximum size of main memory this register can handle, it is `65535 bytes` which is equivalent to `64KB` and the same applies on any other size than `16` bits.
+- It has been mentioned earlier that the register size that stores the values of memory address in order to deal with memory contents affects the available size of main memory for the system. 
+  - eg the instruction pointer register, if its size, say, `16` bits then the maximum available memory for code will be `64KB` (`64` KB = `65536`/`1024` bytes or 2^16^ / 2^10^ bytes) since it is the last reachable memory address by the processor for fetching an instruction. 
+  - if the size of the instruction pointer register is `32` bits, then the maximum available memory for code will be `4GB`.
 
 ## x86 Segmentation
-The aforementioned view of memory, that is, the *addressable array of bytes* can be considered as the *physical* view of the main memory which specifies the mechanism of accessing the data. On top of this physical view a *logical* view can be created and one example of logical views is *x86 segmentation*. 
-
-In x86 segmentation the main memory is viewed as separated parts called *segments* and each segment stores a bunch of related data. To access data inside a segment, each byte can be referred to by its own *offset*. The running program can be separated into three possible types of segments in x86, these types are: *code segment* which stores the code of the program under execution, *data segments* which store the data of the program and the *stack segment* which stores the data of program's stack. Segmentation is the default view of memory in x86 and it's unavoidable and the processor always run with the mind that the running program is divided into segments, however, most modern operating system choose to view the memory as the one described in flat memory model instead of viewing it as segmented areas, to be able to implement flat memory model in x86 which doesn't allow to disable segmentation, at least two segments (one for code and one for data) should be defined in the system, and the size of both segments should be same as physical memory's size and both of segments start from the first memory address `0` and ends in the last memory address (memory size - 1), that is, these both segments will overlap.
-
-![An Example of The Segmented View of the Memory](Figures/x86-ch/memory-segmented-view.png){#fig:memory_segmented_view width=35%}
+- The aforementioned view of memory, that is, the **addressable array of bytes** can be considered as the *physical* view of the main memory which specifies the mechanism of accessing the data. 
+- On top of this physical view a *logical* view can be created and one example of logical views is **x86 segmentation**. 
+- In x86 segmentation the main memory is viewed as separated parts called *segments* 
+  - each segment stores a bunch of related data.
+  - To access data inside a segment, each byte can be referred to by its own **offset**. 
+  - The running program can be separated into three possible types of segments in x86, these types are: 
+    - *code segment* which stores the code of the program under execution, 
+    - *data segments* which store the data of the program and 
+    - the *stack segment* which stores the data of program's stack. 
+  - Segmentation is the default view of memory in x86 and it's unavoidable ie the processor always run with the mind that the running program is divided into segments,
+    - most modern operating system choose to view the memory as the one described in flat memory model instead of viewing it as segmented areas,
+  - to be able to implement flat memory model in x86 which doesn't allow to disable segmentation, at least two segments (one for code and one for data) should be defined in the system, and the size of both segments should be same as physical memory's size and both of segments start from the first memory address `0` and ends in the last memory address (memory size - 1), that is, these both segments will overlap.
+  - .
+      ![An Example of The Segmented View of the Memory](/assets/memory-segmented-view.png)
 
 ### Segmentation in Real Mode
 For the sake of clarity, let's discuss the details of segmentation under real mode first. We have said that logical views (of anything) should be mapped to the physical view either by software or hardware, in this case, the segmentation view is realized and mapped to the architecture of the physical main memory by the x86 processor itself, that is, by the hardware. So, we have a logical view, which is the concept of segmentation which divides a program into separated segments, and the actual physical main memory view which is supported by the real RAM hardware and sees the data as a big array of bytes. Therefore, we need some tools to implement (map) the logical view of segmentation on top the actual hardware.
