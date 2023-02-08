@@ -79,7 +79,7 @@
 00000000 00000000 00000000 00000001b
 ```
 
-It is too long and it will be tedious to work with, and for that the hexadecimal numbering system can be useful. Each digit in hexadecimal represents **four** bits ^[Can you tell why? [Hint: How the maximum hexadecimal number `F` is represented in binary?]], that is, the number `0h` in **h**exadecimal is equivalent to `0000b` in binary. As the `8 bits` known as a byte, the `4 bits` is known as a *nibble*, that is, a nibble is a half byte and, as we have said, but in other words, one digit of hexadecimal represents a nibble. So, we can use hexadecimal to represent the same memory address value in more elegant way.
+It is too long and it will be tedious to work with, and for that the hexadecimal numbering system can be useful. Each digit in hexadecimal represents **four** bits (the maximum hexadecimal number `F` is represented in binary 1111), that is, the number `0h` in **h**exadecimal is equivalent to `0000b` in binary. As the `8 bits` known as a byte, the `4 bits` is known as a *nibble*, that is, a nibble is a half byte and, as we have said, but in other words, one digit of hexadecimal represents a nibble. So, we can use hexadecimal to represent the same memory address value in more elegant way.
 
 ```{.asm}
 00 00 00 01h
@@ -156,86 +156,160 @@ Table: An Example of How Zero to Fifteen are Represented in the Three Numbering 
       ![An Example of The Segmented View of the Memory](/assets/memory-segmented-view.png)
 
 ### Segmentation in Real Mode
-For the sake of clarity, let's discuss the details of segmentation under real mode first. We have said that logical views (of anything) should be mapped to the physical view either by software or hardware, in this case, the segmentation view is realized and mapped to the architecture of the physical main memory by the x86 processor itself, that is, by the hardware. So, we have a logical view, which is the concept of segmentation which divides a program into separated segments, and the actual physical main memory view which is supported by the real RAM hardware and sees the data as a big array of bytes. Therefore, we need some tools to implement (map) the logical view of segmentation on top the actual hardware.
+- Segmentation under real mode is realized and mapped to the architecture of the physical main memory by the x86 processor itself, ie. by the hardware. 
+- So, we have a logical view, which is the concept of segmentation which divides a program into separated segments, and the actual physical main memory view which is supported by the real RAM hardware and sees the data as a big array of bytes. 
+- Therefore, we need some tools to implement (map) the logical view of segmentation on top the actual hardware.
+- For this purpose, special registers named **segment registers** are presented in x86,
+  - the size of each segment register is `16` bits, they are: 
+  - `CS`: to define the code segment. 
+  - `SS`: to define the stack segment.
+  - `DS`, `ES`, `FS` and `GS`: to define data segments,
+    - that means each program can have up to four data segments. 
+  - Each segment register stores the **starting memory address** of a segment and here you can start to observe the mapping between the logical and physical view.
+- In real mode, the size of each segment is `64KB` 
+- We can reach any byte inside a segment by using the *offset* of the required byte,
+  - you can see the resemblance between a memory address of the basic view of memory and an offset of the segmentation view of memory 
+  - The concept and term of offset is not exclusive to segmentation, it is used on other topics related to the memory.
+- Eg, assume that we have a code of some program loaded into the memory and its starting physical memory address is `100d`, that is, the first instruction of this program is stored in this address and the next instructions are stored right after this memory address one after another.
+- To reach the first byte of this code we use the offset `0`, so, the whole physical address of the first byte will be `100:0d`,
+  - starting memory address of the code`:`the offset that we would like to reach to read the byte inside it.
+- Let's assume we would like to reach the offset `33`, which means the byte `34` inside the loaded code, 
+  - then the physical address that we are trying to reach is actually `100:33d`.
+- `CS` register contains the starting memory address of currently executing code segment (for short: current code segment). 
+  - To make the processor handle this piece of code as the *current* code segment, its starting memory address should be loaded into the register `CS`, ie. set value `100d` to `CS`.
+  
+- The x86 processor always run assuming segmentation is in use. 
+- So, let's say it is executing the following assembly instruction `jmp 150d` which jumps to the address `150d`.
+  - What really happens here is that the processor consider the value `150d` as an offset instead of a full memory address, 
+  - so, what the instruction requests from the processor here is to jump to the offset `150` which is inside the current code segment,
+  - the processor is going to retrieve the value of the register `CS` to know what is the starting memory address of the currently active code segment and append the value `150` to it.
+  - Say, the value of `CS` is `100`, then the memory address that the processor is going to jump to is `100:150d`.
 
-For this purpose, special registers named *segment registers* are presented in x86, the size of each segment register is `16` bits and they are: `CS` which is used to define the code segment. `SS` which is used to define the stack segment. `DS`, `ES`, `FS` and `GS` which can be used to define data segments, that means each program can have up to four data segments. Each segment register stores the *starting memory address* of a segment and here you can start to observe the mapping between the logical and physical view. In real mode, the size of each segment is `64KB` and as we have said we can reach any byte inside a segment by using the *offset* of the required byte, you can see the resemblance between a memory address of the basic view of memory and an offset of the segmentation view of memory ^[The concept and term of offset is not exclusive to segmentation, it is used on other topics related to the memory.].
+- This is also applicable on the internal work of the processor, 
+  - the register `IP` which is the instruction pointer actually stores the offset of the next instruction instead of the whole memory address of the instruction.
+  - Any call (or jump) to a code *inside the same code segment* of the caller is known as **near call (or jump)**, otherwise is it a **far call (or jump)**.
+  - Again, let's assume the current value of `CS` is `100d` and you want to call a label which is on the memory location `900:1d`, in this situation you are calling a code that reside in a different code segment, therefore, the processor is going to take the first part of the address which is`900d`, loads it to `CS` then loads the offset `1d` in `IP`.
+  - Because this call caused the change of `CS` value to another value, it is a far call.
 
-Let's take an example to make the matter clear, assume that we have a code of some program loaded into the memory and its starting physical memory address is `100d`, that is, the first instruction of this program is stored in this address and the next instructions are stored right after this memory address one after another. To reach the first byte of this code we use the offset `0`, so, the whole physical address of the first byte will be `100:0d`, as you can see, the part before the colon is the starting memory address of the code and the part after the colon is the offset that we would like to reach and read the byte inside it. In the same way, let's assume we would like to reach the offset `33`, which means the byte `34` inside the loaded code, then the physical address that we are trying to reach is actually `100:33d`. To make the processor handle this piece of code as the *current* code segment then its starting memory address should be loaded into the register `CS`, that is, setting the value `100d` to `CS`, so, we can say in other words that `CS` contains the starting memory address of currently executing code segment (for short: current code segment).
-
-As we have said, the x86 processor always run with the mind that the segmentation is in use. So, let's say it is executing the following assembly instruction `jmp 150d` which jumps to the address `150d`. What really happens here is that the processor consider the value `150d` as an offset instead of a full memory address, so, what the instruction requests from the processor here is to jump to the offset `150` which is inside the current code segment, therefore, the processor is going to retrieve the value of the register `CS` to know what is the starting memory address of the currently active code segment and append the value `150` to it. Say, the value of `CS` is `100`, then the memory address that the processor is going to jump to is `100:150d`. 
-
-This is also applicable on the internal work of the processor, do you remember the register `IP` which is the instruction pointer? It actually stores the offset of the next instruction instead of the whole memory address of the instruction. Any call (or jump) to a code inside the same code segment of the caller is known as *near call (or jump)*, otherwise is it a *far call (or jump)*. Again, let's assume the current value of `CS` is `100d` and you want to call a label which is on the memory location `900:1d`, in this situation you are calling a code that reside in a different code segment, therefore, the processor is going to take the first part of the address which is`900d`, loads it to `CS` then loads the offset `1d` in `IP`. Because this call caused the change of `CS` value to another value, it is a far call.
-
-The same is exactly applicable to the other two types of segments and of course, the instructions deal with different segment types based on their functionality, for example, you have seen that `jmp` and `call` deal the code segment in `CS`, that's because of their functionality which is related to the code. Another example is the instruction `lodsb` which deals with the data segment `DS`, the instruction `push` deals with the stack segment `SS` and so on.
+- The same is exactly applicable to the other two types of segments and of course, the instructions deal with different segment types based on their functionality, for example, 
+  - you have seen that `jmp` and `call` deal the code segment in `CS`, that's because of their functionality which is related to the code.
+  - Another example is the instruction `lodsb` which deals with the data segment `DS`,
+  - the instruction `push` deals with the stack segment `SS` and so on.
 
 #### Segmentation Used in the Bootloader
-In the previous chapter, when we wrote the bootloader, we have dealt with the segments. Let's get back to the source code of the bootloader, you remember that the firmware loads the bootloader on the memory location `07C0h` and because of that we started our bootloader with the following lines.
+- In the previous chapter, when we wrote the bootloader, we have dealt with the segments. Let's get back to the source code of the bootloader. 
+- the firmware loads the bootloader on the memory location `07C0h` and because of that we started our bootloader as.
 
-```{.asm}
-	mov ax, 07C0h
-	mov ds, ax
-```
+  ```{.asm}
+    mov ax, 07C0h
+    mov ds, ax
+  ```
+  - Here, we told the processor that the data segment of our program (the bootloader) starts in the memory address `07C0h`
+    - all segments can be on the same memory location, that is, there is a `64KB` segment of memory which is considered as the currently active code segment, data segment and stack segment.
+    - We have already mentioned that when we have discussed how to implement flat-memory model on x86.
+  - so, if we refer to the memory to read or write **data**, the processor starts with the memory address `07C0h` which is stored in the data segment register `ds`
+  - then it appends the offset that we are referring to,
+    - in other words, any reference to data by the code being executed will make the processor use the value in data segment register as the beginning of the data segment and the offset of referred data as the rest of the address, 
+  - after that, physical memory address of the referred data will be used to perform the instruction. 
+  - An example of instructions that deal with data in our bootloader is the line `mov si, title_string`.
+- Now assume that BIOS has set the value of `ds` to `0` (it can be any other value) and jumped to our bootloader,
+  - that means the data segment in the system now starts from the physical memory address `0` and ends at the physical memory address `65535` 
+    - since the maximum size of a segment in real-mode is 64KB. 
+  - Now let's take the label `title_string` as an example and let's assume that its offset in the binary file of our bootloader is `490`, 
+    - when the processor starts to execute the line `mov si, title_string`, which loads the physical memory address of `title_string` to the register `si`, it will figure out that the offset of `title_string` is `490` and based on the way that x86 handles memory accesses the processor is going to think that we are referring to the physical memory address `490` since the value of `ds` is `0`, 
+    - but in reality, the correct physical memory address of `title_string` is the offset `490` **inside** the memory address `07C0h` since our bootloader is loaded into this address and not the physical memory address `0`, so, to be able to reach to the correct addresses of the data that we have defined in our bootloader and that are loaded with the bootloader starting from the memory address `07C0h` we need to tell the processor that our data segment starts from `07C0h` and with any reference to data, it should calculate the offset of that data starting from this physical address, and that exactly what these two lines do, 
+  - in other words, change the current data segment to another one which starts from the first place of our bootloader.
 
-Here, we told the processor that the data segment of our program (the bootloader) starts in the memory address `07C0h` ^[Yes, all segments can be on the same memory location, that is, there is a `64KB` segment of memory which is considered as the currently active code segment, data segment and stack segment. We have already mentioned that when we have discussed how to implement flat-memory model on x86.], so, if we refer to the memory to read or write **data**, the processor starts with the memory address `07C0h` which is stored in the data segment register `ds` and then it appends the offset that we are referring to, in other words, any reference to data by the code being executed will make the processor to use the value in data segment register as the beginning of the data segment and the offset of referred data as the rest of the address, after that, this physical memory address of the referred data will be used to perform the instruction. An example of instructions that deal with data in our bootloader is the line `mov si, title_string`.
+- The second use of the segments in the bootloader is when we tried to load the kernel from the disk by using the BIOS service `13h:02h` in the following code.
 
-Now assume that BIOS has set the value of `ds` to `0` (it can be any other value) and jumped to our bootloader, that means the data segment in the system now starts from the physical memory address `0` and ends at the physical memory address `65535` since the maximum size of a segment in real-mode is 64KB. Now let's take the label `title_string` as an example and let's assume that its offset in the binary file of our bootloader is `490`, when the processor starts to execute the line `mov si, title_string` ^[Which loads the physical memory address of `title_string` to the register `si`.] it will, somehow, figures that the offset of `title_string` is `490` and based on the way that x86 handles memory accesses the processor is going to think that we are referring to the physical memory address `490` since the value of `ds` is `0`, but in reality, the correct physical memory address of `title_string` is the offset `490` **inside** the memory address `07C0h` since our bootloader is loaded into this address and not the physical memory address `0`, so, to be able to reach to the correct addresses of the data that we have defined in our bootloader and that are loaded with the bootloader starting from the memory address `07C0h` we need to tell the processor that our data segment starts from `07C0h` and with any reference to data, it should calculate the offset of that data starting from this physical address, and that exactly what these two lines do, in other words, change the current data segment to another one which starts from the first place of our bootloader.
+  ```{.asm}
+    mov ax, 0900h
+    mov es, ax
+    
+    mov ah, 02h
+    mov al, 01h
+    mov ch, 0h
+    mov cl, 02h
+    mov dh, 0h
+    mov dl, 80h
+    mov bx, 0h
+    int 13h
+  ```
+  - here we have used the other data segment `ES` to define a new data segment that starts from the memory address `0900h`,
+  - we did that because the BIOS service `13h:02h` loads the required content (in our case the kernel) to the memory address `ES:BX`, 
+    - for that, we have defined the new data segment and set the value of `bx` to `0h`. 
+    - That means the code of the kernel will be loaded on `0900:0000h` 
+    - and because of that, after loading the kernel successfully we have performed a far jump.
 
-The second use of the segments in the bootloader is when we tried to load the kernel from the disk by using the BIOS service `13h:02h` in the following code.
-
-```{.asm}
-	mov ax, 0900h
-	mov es, ax
-	
-	mov ah, 02h
-	mov al, 01h
-	mov ch, 0h
-	mov cl, 02h
-	mov dh, 0h
-	mov dl, 80h
-	mov bx, 0h
-	int 13h
-```
-
-You can see here, we have used the other data segment `ES` to define a new data segment that starts from the memory address `0900h`, we did that because the BIOS service `13h:02h` loads the required content (in our case the kernel) to the memory address `ES:BX`, for that, we have defined the new data segment and set the value of `bx` to `0h`. That means the code of the kernel will be loaded on `0900:0000h` and because of that, after loading the kernel successfully we have performed a far jump.
-
-```{.asm}
-jmp 0900h:0000
-```
-
-Once this instruction is executed, the value of `CS` will be changed from the value `07C0h`, where the bootloader resides, to the value `0900h` where the kernel resides and the value of `IP` register will be `0000` then the execution of the kernel is going to start.
+      ```{.asm}
+      jmp 0900h:0000
+      ```
+- Once this instruction is executed, the value of `CS` will be changed from the value `07C0h`, where the bootloader resides, to the value `0900h` where the kernel resides and the value of `IP` register will be `0000` then the execution of the kernel is going to start.
 
 ### Segmentation in Protected Mode
-The fundamentals of segmentation in protected mode is exactly same as the ones explained in real mode, but it has been extended to provide more features such as *memory protection*. In protected mode, a table named *global descriptor table* (`GDT`) is presented, this table is stored in the main memory and its starting memory address is stored in the special purpose register `GDTR` as a reference, each entry in this table called a *segment descriptor* which has the size `8` bytes and they can be referred to by an index number called *segment selector* ^[This is a **relaxed** definition of segment selector, a more accurate one will be presented later.] which is the offset of the entry inside `GDT` table, For example, the offset of the first entry in `GDT` is `0`, and adding this offset with the value of `GDTR` gives us the memory address of that entry, however, the first entry of `GDT` should not be used by the operating system. 
+- The fundamentals of segmentation in protected mode is exactly same as the ones explained in real mode, but it has been extended to provide more features such as *memory protection*. 
+- In protected mode, a table named **global descriptor table** (`GDT`) is presented, 
+  - this table is stored in the main memory and 
+  - its starting memory address is stored in the special purpose register `GDTR` as a reference,
+  - each entry in this table called a **segment descriptor** 
+    - which has the size `8` bytes 
+    - and they can be referred to by an index number called **segment selector** which is the offset of the entry inside `GDT` table.
+    - This is a **relaxed** definition of segment selector, a more accurate one will be presented later.
+  - For example, the offset of the first entry in `GDT` is `0`, and adding this offset with the value of `GDTR` gives us the memory address of that entry,
+    - however, the first entry of `GDT` should not be used by the operating system. 
 
-An entry of `GDT` (a segment descriptor), defines a segment (of any type) and has the information that is required by the processor to deal with that segment. The starting memory address of the segment is stored in its descriptor ^[In real mode, the starting address of the segment is stored directly on the corresponding segment register (e.g. `CS` for code segment).], also, the size (or limit) of the segment. The segment selector of the currently active segment should be stored in the corresponding segment register.
-
-To clarify the matter, consider the following example. Let's assume we are currently running two programs and their code are loaded into the main memory and we would like to separate these two pieces of code into a couple of code segments. The memory area `A` contains code of the first program and starts from the memory address `800` while the memory area `B` contains the code of the second program`B` and starts in the memory address `900`. Assume that the starting memory address of `GDT` is `500` which is already loaded in `GDTR`. 
-
-To make the processor consider `A` and `B` as code segments we should define a segment descriptor for each one of them. We already know that the size of a segment descriptor is `8` bytes, so, if we define a segment descriptor for the segment `A` as entry `1` (remember that the entries on `GDT` starts from zero) then its offset (segment selector) in `GDT` will be `8` (`1 * 8`), the segment descriptor of `A` should contain the starting address of `A` which is `800`, and we will define the segment descriptor of `B` as entry `2` which means its offset (segment selector) will be `16` (`2 * 8`). 
-
-Let's assume now that we want the processor to execute the code of segment `A`, we already know that the processor consults the register `CS` to decide which code segment is currently active and should be executed next, for that, the **segment selector** of code segment `A` should be loaded in `CS`, so the processor can start executing it. In real mode, the value of `CS` and all other segment registers was a memory address, on the other hand, in protected mode, the value of `CS` and all other segment registers is a segment selector. 
-
-In our situation, the processor takes the segment selector of `A` from `CS` which is `8` and starting from the memory address which is stored in `GDTR` it walks `8` bytes, so, if `GDTR = 500`, the processor will find the segment descriptor of `A` in the memory address `508`. The starting address of `A` will be found in its segment descriptor and the processor can use it with the value of register `EIP` to execute `A`'s code. Let's assume a far jump is occurred from `A` to `B`, then the value of `CS` will be changed to the segment selector of `B` which is `16`.
+- An entry of `GDT` (a segment descriptor),
+  - defines a segment (of any type)
+  - and has the information that is required by the processor to deal with that segment.
+- The starting memory address of the segment is stored in its descriptor, also, the size (or limit) of the segment.
+  - In real mode, the starting address of the segment is stored directly on the corresponding segment register (e.g. `CS` for code segment).
+- The segment selector of the currently active segment should be stored in the corresponding segment register.
+- Eg. let's assume we are currently running two programs and their code are loaded into the main memory and we would like to separate these two pieces of code into a couple of code segments. 
+  - The memory area `A` contains code of the first program and starts from the memory address `800`
+  - while the memory area `B` contains the code of the second program`B` and starts in the memory address `900`.
+  - Assume that the starting memory address of `GDT` is `500` which is already loaded in `GDTR`. 
+  - To make the processor consider `A` and `B` as code segments we should define a segment descriptor for each one of them.
+  - We already know that the size of a segment descriptor is `8` bytes, so, if we define a segment descriptor for the segment `A` as entry `1` (the entries on `GDT` starts from zero) then its offset (segment selector) in `GDT` will be `8` (`1 * 8`),
+  - the segment descriptor of `A` should contain the starting address of `A` which is `800`, and we will define the segment descriptor of `B` as entry `2` which means its offset (segment selector) will be `16` (`2 * 8`). 
+  - Let's assume now that we want the processor to execute the code of segment `A`, we know that the processor consults the register `CS` to decide which code segment is currently active and should be executed next, for that, the **segment selector** of code segment `A` should be loaded in `CS`, so the processor can start executing it.
+  - The value of `CS` and all other segment registers
+    - In real mode, it is a memory address, 
+    - In protected mode, it is a segment selector. 
+  - Here the processor takes the segment selector of `A` from `CS` which is `8` and starting from the memory address which is stored in `GDTR` it walks `8` bytes,
+    - so, if `GDTR = 500`, the processor will find the segment descriptor of `A` in the memory address `508`. 
+    - The starting address of `A` will be found in its segment descriptor and the processor can use it with the value of register `EIP` to execute `A`'s code.
+  - Let's assume a far jump is occurred from `A` to `B`, then the value of `CS` will be changed to the segment selector of `B` which is `16`.
 
 #### The Structure of Segment Descriptor
-A segment descriptor is an `8` bytes entry of global descriptor table which stores multiple *fields* and *flags* that describe the properties of a specific segment in the memory. With each memory reference to any segment, the processor is going to consult the descriptor that describes the segment in question to obtain basic information like starting memory address of this segment.
+- A segment descriptor is an `8` bytes entry of global descriptor table which stores multiple *fields* and *flags* that describe the properties of a specific segment in the memory. 
+- With each memory reference to any segment, the processor is going to consult the descriptor that describes the segment in question to obtain basic information like starting memory address of this segment.
+- Beside the basic information, a segment descriptor stores information the helps in memory protection,
+  - due to this, segmentation in x86 protected-mode is considered as a way for memory protection and not just a logical view of the memory, so each memory reference is being monitored by the processor.
+  - By using those properties that are related to memory protection, the processor will be able to protect the different segments on the system from each other and not letting code running on lesser privilege call a code or manipulate data which belong to more privileged area of the system, 
+  - a concrete example of that is when a userspace software (e.g. Web Browser) tries to modify an internal data structure in the kernel. 
 
-Beside the basic information, a segment descriptor stores information the helps in memory protection, due to that, segmentation in x86 protected-mode is considered as a way for memory protection and not a mere logical view of the memory, so each memory reference is being monitored by the processor. 
-
-By using those properties that are related to memory protection, the processor will be able to protect the different segments on the system from each other and not letting some less privileged to call a code or manipulate data which belong to more privileged area of the system, a concrete example of that is when a userspace software (e.g. Web Browser) tries to modify an internal data structure in the kernel. 
-
-In the following subsections, each field and flag of segment descriptor will be explained, but before getting started we need to note that in here and in Intel's official x86 manual the term *field* is used when the size of the value that should be stored in the descriptor is **more than** `1` bit, for example the segment's starting memory address is stored in `4` bytes, then the place where this address is stored in the descriptor is called a field, otherwise when the term *flag* is used that means the size of the value is `1` bit.
+- In the following subsections, each field and flag of segment descriptor will be explained, but before getting started we need to note that in here and in Intel's official x86 manual the term **field** is used when the size of the value that should be stored in the descriptor is **more than** `1` bit, 
+  - for example the segment's starting memory address is stored in `4` bytes, then the place where this address is stored in the descriptor is called a field, otherwise when the term *flag* is used that means the size of the value is `1` bit.
 
 ##### Segment's Base Address and Limit
-The most important information about a segment is its starting memory address, which is called the *base address* of a segment. In real mode, the base address was stored in the corresponding segment register directly, but in protected mode, where we have more information about a segment than mere base address, this information is stored in the descriptor of the segment ^[Reminder: In protected mode, the corresponding segment register stores the selector of the currently active segment.].
+- The most important information about a segment is its starting memory address, which is called the **base address** of a segment.
+- In real mode, the base address was stored in the corresponding segment register directly, 
+- but in protected mode, where we have more information about a segment than mere base address, this information is stored in the descriptor of the segment.
+  - Reminder: In protected mode, the corresponding segment register stores the selector of the currently active segment.
 
-When the currently running code refers to a memory address to read from it, write to it (in the case of data segments) or call it (in the case of code segments) it is actually referring to a specific segment in the system ^[And it **should**, since segmentation is enabled by default in x86 and cannot be disabled.]. For the simplicity of next discussions, we call this memory address, which is referenced by the currently running code, the *generated memory address* because, you know, it is generated by the code.
+- When the currently running code refers to a memory address to read from it, write to it (in the case of data segments) or call it (in the case of code segments) it is actually referring to a specific segment in the system 
+  - [And it **should**, since segmentation is enabled by default in x86 and cannot be disabled].
+- For the simplicity of next discussions, we call this memory address, which is referenced by the currently running code, the *generated memory address* as it is generated by the code.
 
-Any generated memory address in x86 architecture is not an actual physical memory address ^[Remember our discussion of the difference between our logical view of the memory (e.g. segmentation) and the actual physical hardware], that means, if you hypothetically get a generated memory address and try to get the content of its physical memory location, the obtained data will not be same as the data which is required by the code. Instead, a generated memory address is named by Intel's official manual a *logical memory address* because, you know, it is not real memory address, **it is** logical. Every logical memory address refers to some byte in a specific segment in the system, and to be able to obtain the data from the actual physical memory, this logical memory address should be *translated* to a *physical memory address* ^[We can see here how obvious the mapping between the logical view of the memory and the real-world memory.].
+- Any generated memory address in x86 architecture is not an actual physical memory address, that means, if you hypothetically get a generated memory address and try to get the content of its physical memory location, the obtained data will not be same as the data which is required by the code.
+  - Recall the difference between our logical view of the memory (e.g. segmentation) and the actual physical hardware 
+- Instead, a generated memory address is named by Intel's official manual a **logical memory address** because it is not real memory address, **it is** logical.
+- Every logical memory address refers to some byte in a specific segment in the system, and to be able to obtain the data from the actual physical memory, this logical memory address should be *translated* to a *physical memory address* 
+  - We can see here how obvious the mapping between the logical view of the memory and the real-world memory.
 
-The logical memory address in x86 may pass **two** translation processes instead of one in order to obtain the physical memory address. The first address translation is performed on a logical memory address to obtain a *linear memory address* which is another not real and not physical memory address which is there in x86 architecture because of paging feature. If paging ^[Don't worry about paging right now. It will be discussed later in this book. All you need to know now is that paging is another logical view of the memory. Paging is disabled by default in x86 which makes it an optional feature unlike segmentation.] is enabled in the system, a second translation process takes place on this linear memory address to obtain the real physical memory address. If paging is disabled, the linear memory address which is generated by the first translation process is same as the physical memory address. We can say that the first translation is there in x86 due to the segmentation view of memory, while the second translation is there in x86 due to the paging view of memory.
+The logical memory address in x86 may pass **two** translation processes instead of one in order to obtain the physical memory address. The first address translation is performed on a logical memory address to obtain a *linear memory address* which is another not real and not physical memory address which is there in x86 architecture because of paging feature. If paging [Don't worry about paging right now. It will be discussed later in this book. All you need to know now is that paging is another logical view of the memory. Paging is disabled by default in x86 which makes it an optional feature unlike segmentation.] is enabled in the system, a second translation process takes place on this linear memory address to obtain the real physical memory address. If paging is disabled, the linear memory address which is generated by the first translation process is same as the physical memory address. We can say that the first translation is there in x86 due to the segmentation view of memory, while the second translation is there in x86 due to the paging view of memory.
 
-![Shows How a Logical Memory Address is Translated to a Linear Memory Address (Which Represents a Physical Address when Paging is Disabled).](Figures/x86-ch/logical-memory-address-translation.png){#fig:logical_memory_address_translation width=90%}
+![Shows How a Logical Memory Address is Translated to a Linear Memory Address (Which Represents a Physical Address when Paging is Disabled).](/assets/logical-memory-address-translation.png)
 
 For now, our focus will be on the translation from a logical memory address to a linear memory address which is same as the physical memory address since paging feature is disabled by default in x86. Each logical memory address consists of two parts, a `16` bits segment selector and a `32` bits offset. When the currently running code generates a logical memory address (for instance, to read some data from memory) the processor needs to perform the translation process to obtain the physical memory address as the following. First, it reads the value of the register `GDTR` which contains the starting physical memory address of `GDT`, then it uses the `16-bit` segment selector in the generated logical address to locate the descriptor of the segment that the code would like to read the data from, inside segment's descriptor, the physical base address (the starting physical address) of the requested segment can be found, the processor obtains this base address and adds the `32-bit` offset from the logical memory address to the base address to obtain the last result, which is the linear memory address.
 
