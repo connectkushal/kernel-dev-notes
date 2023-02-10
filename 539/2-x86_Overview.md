@@ -40,7 +40,7 @@
 - segmentation is the default in x86 and cannot be turned off while paging is optional, the operating system has the option to use it as a way of memory protection or not.
 
 - In the protected-mode the concept of **privilege levels** has been introduced to handle the protections needed in the previous first and second points. 
-- The academic literature of operating systems separate the system environment into two modes, *kernel-mode* and *user-mode*, 
+- The academic literature of operating systems separate the system environment into two modes, **kernel-mode** and **user-mode**, 
   - at a given time, the system may run on one of these modes and not both of them. 
   - The kernel runs on kernel-mode, and has the privilege to do anything (e.g. access any memory location, access any resource of the system and perform any operation), 
   - while the user applications run on user-mode which is a restricted environment where the code that runs on doesn't have the privilege to perform sensitive actions.
@@ -108,17 +108,21 @@ Table: An Example of How Zero to Fifteen are Represented in the Three Numbering 
 
 ## The Basic View of Memory
 - The basic view of the main memory is that it is an *array of cells*, each cell has the ability to store **one byte** and it is reachable by a unique number called **memory address** 
-  - The architecture which each memory address points to `1 byte` is known as *byte-addressable architecture* or *byte machines*. 
+  - The architecture which each memory address points to `1 byte` is known as **byte-addressable architecture** or **byte machines**.
   - It is the most common architecture.
-  - Other architectures are possible, such as *word-addressable architecture* or *word machines*. 
+  - Other architectures are possible, such as *word-addressable architecture* or *word machines*.
 - Range of memory addresses starts from `0` to some limit `x`,
   - eg, if the system has `1MB` of *physical* main memory, then the last memory address in the range will be `1023`.
-- This range of memory addresses is known as **address space** and it can be a **physical address space** which is limited by the physical main memory or a **logical address space**.
-  - When we say *physical* we mean the actual hardware
+- This range of memory addresses is known as **address space** 
+  - it can be a **physical address space** or **logical address space**.
+    - When we say *physical* we mean the actual hardware,
+    - so it is limited by the physical main memory.
+    - Eg the maximum capacity of the hardware of the main memory (RAM) is `1MB` then the physical address space of the machine is up to `1MB`.
 - A well-known example of using logical address space is **virtual memory** which provides a logical address space of size `4GB` in `32-bit` architecture even if the actual size of physical main memory is less than `4GB`.
 - Viewing the memory as an array of contiguous cells is also known as **flat memory model**.
- - When the maximum capacity of the hardware of the main memory (RAM) is `1MB` then the physical address space of the machine is up to `1MB`. On the other hand, *logical*  doesn't necessarily represents or obeys the way the actual hardware works on. 
-   - To make the *logical* view of anything works, it should be mapped into the real *physical* view, that is, it should be somehow translated for the physical hardware to be understood, this mapping is handled by the software or sometimes special parts of the hardware.
+ - *logical*  doesn't necessarily represents or obeys the way the actual hardware works on. 
+   - To make the *logical* view of anything works, it should be mapped or translated into the real *physical* view,
+   - this mapping is handled by the software or sometimes special parts of the hardware.
 
 - the memory address is just a numerical value, a number. 
   - When discussing the memory address as a mere number in the following chapters, it will be call it *memory address value* or *the value of memory address*, 
@@ -128,16 +132,18 @@ Table: An Example of How Zero to Fifteen are Represented in the Three Numbering 
   - when processor is executing some instructions that involve the main memory (e.g. reading a content from some memory location or dealing with program counter), the related values of memory addresses are stored temporarily on the registers of the processor, 
   - due to that, the length of a memory address value is bounded to the size of the processor's registers,
     - so, in `32-bit` environments, where the size of the registers is usually `32-bit`, the length of the memory address value is **always** `32` bits,
-    - eg , assume the memory address value `1`, when it is stored (and handled) by the `32-bit` processor, it will be stored as the following sequence of bits.
+    - eg, assume the memory address value `1`, when it is stored (and handled) by the `32-bit` processor, it will be stored as the following sequence of bits.
 
       ```{.c}
       00000000 00000000 00000000 00000001
       ```
-    - the value `1` has been represented in exactly `32` bits, appending zeros to the left doesn't change the value itself, it is similar to writing a number as `0000539` which is exactly `539`.
+    - the value `1` has been represented in exactly `32` bits, 
+    - appending zeros to the left doesn't change the value itself, similar to writing any number, say `539` as `0000539`.
 
-- It has been mentioned earlier that the register size that stores the values of memory address in order to deal with memory contents affects the available size of main memory for the system. 
-  - eg the instruction pointer register, if its size, say, `16` bits then the maximum available memory for code will be `64KB` (`64` KB = `65536`/`1024` bytes or 2^16^ / 2^10^ bytes) since it is the last reachable memory address by the processor for fetching an instruction. 
+- Register size that stores the values of memory address in order to deal with memory contents affects the available size of main memory for the system. 
+  - eg if the instruction pointer register `16` bits then the maximum available memory for code will be `64KB` (`64` KB = `65536`/`1024` bytes or 2^16^ / 2^10^ bytes) since it is the last reachable memory address by the processor for fetching an instruction. 
   - if the size of the instruction pointer register is `32` bits, then the maximum available memory for code will be `4GB`.
+    - //Since each address points to 1byte, the last address will point to 2^32^ byte = 2^32-10^KB or 2^32^/2^10+10+10^ GB = 4GB)
 
 ## x86 Segmentation
 - The aforementioned view of memory, that is, the **addressable array of bytes** can be considered as the *physical* view of the main memory which specifies the mechanism of accessing the data. 
@@ -153,7 +159,7 @@ Table: An Example of How Zero to Fifteen are Represented in the Three Numbering 
     - most modern operating system choose to view the memory as the one described in flat memory model instead of viewing it as segmented areas,
   - to be able to implement flat memory model in x86 which doesn't allow to disable segmentation, at least two segments (one for code and one for data) should be defined in the system, and the size of both segments should be same as physical memory's size and both of segments start from the first memory address `0` and ends in the last memory address (memory size - 1), that is, these both segments will overlap.
   - .
-      ![An Example of The Segmented View of the Memory](/assets/memory-segmented-view.png)
+     ![An Example of The Segmented View of the Memory](/assets/memory-segmented-view.png)
 
 ### Segmentation in Real Mode
 - Segmentation under real mode is realized and mapped to the architecture of the physical main memory by the x86 processor itself, ie. by the hardware. 
@@ -188,12 +194,13 @@ Table: An Example of How Zero to Fifteen are Represented in the Three Numbering 
 - This is also applicable on the internal work of the processor, 
   - the register `IP` which is the instruction pointer actually stores the offset of the next instruction instead of the whole memory address of the instruction.
   - Any call (or jump) to a code *inside the same code segment* of the caller is known as **near call (or jump)**, otherwise is it a **far call (or jump)**.
-  - Again, let's assume the current value of `CS` is `100d` and you want to call a label which is on the memory location `900:1d`, in this situation you are calling a code that reside in a different code segment, therefore, the processor is going to take the first part of the address which is`900d`, loads it to `CS` then loads the offset `1d` in `IP`.
+  - Again, let's assume the current value of `CS` is `100d` and you want to call a label which is on the memory location `900:1d`, since code resides in a different code segment, the processor is going to take `900d`, load it to `CS` then load the offset `1d` in `IP`.
   - Because this call caused the change of `CS` value to another value, it is a far call.
 
-- The same is exactly applicable to the other two types of segments and of course, the instructions deal with different segment types based on their functionality, for example, 
-  - you have seen that `jmp` and `call` deal the code segment in `CS`, that's because of their functionality which is related to the code.
-  - Another example is the instruction `lodsb` which deals with the data segment `DS`,
+- The same is exactly applicable to the other two types of segments,
+- the instructions deal with different segment types based on their functionality, for example, 
+  - you have seen that `jmp` and `call` deal the code segment in `CS`, which is related to the code.
+  - Another instruction `lodsb` deals with the data segment `DS`,
   - the instruction `push` deals with the stack segment `SS` and so on.
 
 #### Segmentation Used in the Bootloader
@@ -204,21 +211,19 @@ Table: An Example of How Zero to Fifteen are Represented in the Three Numbering 
     mov ax, 07C0h
     mov ds, ax
   ```
-  - Here, we told the processor that the data segment of our program (the bootloader) starts in the memory address `07C0h`
-    - all segments can be on the same memory location, that is, there is a `64KB` segment of memory which is considered as the currently active code segment, data segment and stack segment.
-    - We have already mentioned that when we have discussed how to implement flat-memory model on x86.
-  - so, if we refer to the memory to read or write **data**, the processor starts with the memory address `07C0h` which is stored in the data segment register `ds`
+  - Here, we told the processor that the data segment of our program (the bootloader) starts in the memory address `07C0h` by storing it in the data segment register `ds`
+    - all segments can be on the same memory location, which means there is a `64KB` segment of memory which is considered as the currently active code segment, data segment and stack segment.
+  - So, lets say if we refer to the memory to read or write **data**, the processor starts with the memory address `07C0h`.
   - then it appends the offset that we are referring to,
     - in other words, any reference to data by the code being executed will make the processor use the value in data segment register as the beginning of the data segment and the offset of referred data as the rest of the address, 
   - after that, physical memory address of the referred data will be used to perform the instruction. 
-  - An example of instructions that deal with data in our bootloader is the line `mov si, title_string`.
+  - An example of instructions that deal with data in our bootloader is: `mov si, title_string`.
 - Now assume that BIOS has set the value of `ds` to `0` (it can be any other value) and jumped to our bootloader,
   - that means the data segment in the system now starts from the physical memory address `0` and ends at the physical memory address `65535` 
     - since the maximum size of a segment in real-mode is 64KB. 
   - Now let's take the label `title_string` as an example and let's assume that its offset in the binary file of our bootloader is `490`, 
-    - when the processor starts to execute the line `mov si, title_string`, which loads the physical memory address of `title_string` to the register `si`, it will figure out that the offset of `title_string` is `490` and based on the way that x86 handles memory accesses the processor is going to think that we are referring to the physical memory address `490` since the value of `ds` is `0`, 
-    - but in reality, the correct physical memory address of `title_string` is the offset `490` **inside** the memory address `07C0h` since our bootloader is loaded into this address and not the physical memory address `0`, so, to be able to reach to the correct addresses of the data that we have defined in our bootloader and that are loaded with the bootloader starting from the memory address `07C0h` we need to tell the processor that our data segment starts from `07C0h` and with any reference to data, it should calculate the offset of that data starting from this physical address, and that exactly what these two lines do, 
-  - in other words, change the current data segment to another one which starts from the first place of our bootloader.
+    - when the processor starts to execute the line `mov si, title_string`, it loads the physical memory address of `title_string` to the register `si`, it will figure out that the offset of `title_string` is `490` and based on the way that x86 handles memory accesses the processor is going to think that we are referring to the physical memory address `490` since the value of `ds` is `0`, 
+    - but in reality, the correct physical memory address of `title_string` is the offset `490` **inside** the memory address `07C0h` since our bootloader is loaded into this address and not the physical memory address `0`, so, to be able to reach to the correct addresses of the data that we have defined in our bootloader and that are loaded with the bootloader starting from the memory address `07C0h` we need to tell the processor that our data segment starts from `07C0h` and with any reference to data, it should calculate the offset of that data starting from this physical address, and that exactly what these two lines do 
 
 - The second use of the segments in the bootloader is when we tried to load the kernel from the disk by using the BIOS service `13h:02h` in the following code.
 
@@ -244,7 +249,7 @@ Table: An Example of How Zero to Fifteen are Represented in the Three Numbering 
       ```{.asm}
       jmp 0900h:0000
       ```
-- Once this instruction is executed, the value of `CS` will be changed from the value `07C0h`, where the bootloader resides, to the value `0900h` where the kernel resides and the value of `IP` register will be `0000` then the execution of the kernel is going to start.
+  - Once this instruction is executed, the value of `CS` will be changed from the value `07C0h`, where the bootloader resides, to the value `0900h` where the kernel resides and the value of `IP` register will be `0000` then the execution of the kernel is going to start.
 
 ### Segmentation in Protected Mode
 - The fundamentals of segmentation in protected mode is exactly same as the ones explained in real mode, but it has been extended to provide more features such as *memory protection*. 
@@ -281,122 +286,219 @@ Table: An Example of How Zero to Fifteen are Represented in the Three Numbering 
   - Let's assume a far jump is occurred from `A` to `B`, then the value of `CS` will be changed to the segment selector of `B` which is `16`.
 
 #### The Structure of Segment Descriptor
-- A segment descriptor is an `8` bytes entry of global descriptor table which stores multiple *fields* and *flags* that describe the properties of a specific segment in the memory. 
+- A segment descriptor is an `8` bytes entry of global descriptor table which stores multiple **fields** and **flags** that describe the properties of a specific segment in the memory. 
 - With each memory reference to any segment, the processor is going to consult the descriptor that describes the segment in question to obtain basic information like starting memory address of this segment.
 - Beside the basic information, a segment descriptor stores information the helps in memory protection,
   - due to this, segmentation in x86 protected-mode is considered as a way for memory protection and not just a logical view of the memory, so each memory reference is being monitored by the processor.
   - By using those properties that are related to memory protection, the processor will be able to protect the different segments on the system from each other and not letting code running on lesser privilege call a code or manipulate data which belong to more privileged area of the system, 
   - a concrete example of that is when a userspace software (e.g. Web Browser) tries to modify an internal data structure in the kernel. 
 
-- In the following subsections, each field and flag of segment descriptor will be explained, but before getting started we need to note that in here and in Intel's official x86 manual the term **field** is used when the size of the value that should be stored in the descriptor is **more than** `1` bit, 
-  - for example the segment's starting memory address is stored in `4` bytes, then the place where this address is stored in the descriptor is called a field, otherwise when the term *flag* is used that means the size of the value is `1` bit.
+- Intel's official x86 manual the term **field** is used when the size of the value that should be stored in the descriptor is **more than** `1` bit,
+  - for example the segment's starting memory address is stored in `4` bytes, then the place where this address is stored in the descriptor is called a field, 
+- the term **flag** is used that means the size of the value is `1` bit.
 
 ##### Segment's Base Address and Limit
 - The most important information about a segment is its starting memory address, which is called the **base address** of a segment.
 - In real mode, the base address was stored in the corresponding segment register directly, 
 - but in protected mode, where we have more information about a segment than mere base address, this information is stored in the descriptor of the segment.
-  - Reminder: In protected mode, the corresponding segment register stores the selector of the currently active segment.
+  - Reminder: In protected mode, the corresponding segment register stores the selector of the currently *active* segment.
 
-- When the currently running code refers to a memory address to read from it, write to it (in the case of data segments) or call it (in the case of code segments) it is actually referring to a specific segment in the system 
-  - [And it **should**, since segmentation is enabled by default in x86 and cannot be disabled].
-- For the simplicity of next discussions, we call this memory address, which is referenced by the currently running code, the *generated memory address* as it is generated by the code.
+- When the currently running code refers to a memory address to read from it or write to it (like in data segments) or call it (in case of code segments) it is actually referring to a specific segment in the system 
+  - which it **should**, since segmentation is enabled by default in x86 and cannot be disabled.
+- For the simplicity of next discussions, we call this memory address being referenced by the currently running code, the *generated memory address* as it is generated by the code.
 
-- Any generated memory address in x86 architecture is not an actual physical memory address, that means, if you hypothetically get a generated memory address and try to get the content of its physical memory location, the obtained data will not be same as the data which is required by the code.
-  - Recall the difference between our logical view of the memory (e.g. segmentation) and the actual physical hardware 
-- Instead, a generated memory address is named by Intel's official manual a **logical memory address** because it is not real memory address, **it is** logical.
+- Any generated memory address in x86 architecture is not an actual physical memory address
+  - if you hypothetically get a generated memory address and try to get the content of its physical memory location, the obtained data will not be same as the data which is required by the code.
+- Instead, a generated memory address is named by Intel's official manual a **logical memory address** because it is not real memory address, it is *logical*.
 - Every logical memory address refers to some byte in a specific segment in the system, and to be able to obtain the data from the actual physical memory, this logical memory address should be *translated* to a *physical memory address* 
-  - We can see here how obvious the mapping between the logical view of the memory and the real-world memory.
 
-The logical memory address in x86 may pass **two** translation processes instead of one in order to obtain the physical memory address. The first address translation is performed on a logical memory address to obtain a *linear memory address* which is another not real and not physical memory address which is there in x86 architecture because of paging feature. If paging [Don't worry about paging right now. It will be discussed later in this book. All you need to know now is that paging is another logical view of the memory. Paging is disabled by default in x86 which makes it an optional feature unlike segmentation.] is enabled in the system, a second translation process takes place on this linear memory address to obtain the real physical memory address. If paging is disabled, the linear memory address which is generated by the first translation process is same as the physical memory address. We can say that the first translation is there in x86 due to the segmentation view of memory, while the second translation is there in x86 due to the paging view of memory.
+- The logical memory address in x86 may pass 2 translation processes in order to obtain the physical memory address.
+  - The first address translation is performed on a logical memory address to obtain a *linear memory address* which is another not real and not physical memory address which is there in x86 architecture because of paging feature. 
+  - If paging is enabled in the system, a second translation process takes place on this linear memory address to obtain the real physical memory address.
+    - paging is another logical view of the memory which will be discussed later.
+    - Paging is disabled by default in x86 which makes it an optional feature unlike segmentation.
+  - If paging is disabled, the linear memory address which is generated by the first translation process is same as the physical memory address.
+- We can say that 
+  - the first translation is there in x86 due to the segmentation view of memory, 
+  - the second translation is there in x86 due to the paging view of memory.
 
-![Shows How a Logical Memory Address is Translated to a Linear Memory Address (Which Represents a Physical Address when Paging is Disabled).](/assets/logical-memory-address-translation.png)
+  ![Shows How a Logical Memory Address is Translated to a Linear Memory Address (Which Represents a Physical Address when Paging is Disabled).](/assets/logical-memory-address-translation.png)
 
-For now, our focus will be on the translation from a logical memory address to a linear memory address which is same as the physical memory address since paging feature is disabled by default in x86. Each logical memory address consists of two parts, a `16` bits segment selector and a `32` bits offset. When the currently running code generates a logical memory address (for instance, to read some data from memory) the processor needs to perform the translation process to obtain the physical memory address as the following. First, it reads the value of the register `GDTR` which contains the starting physical memory address of `GDT`, then it uses the `16-bit` segment selector in the generated logical address to locate the descriptor of the segment that the code would like to read the data from, inside segment's descriptor, the physical base address (the starting physical address) of the requested segment can be found, the processor obtains this base address and adds the `32-bit` offset from the logical memory address to the base address to obtain the last result, which is the linear memory address.
+- For now, our focus will be on the translation from a logical memory address to a linear memory address which is same as the physical memory address since paging feature is disabled by default in x86. 
+- Each logical memory address consists of two parts,
+  - a `16` bits segment selector and 
+  - a `32` bits offset. 
+- When the currently running code generates a logical memory address (for instance, to read some data from memory) the processor needs to perform the translation process to obtain the physical memory address as the following. 
+  - First, it reads the value of the register `GDTR` which contains the starting physical memory address of `GDT`, 
+  - then it uses the `16-bit` segment selector in the generated logical address to locate the descriptor of the segment that the code would like to read the data from,
+  - inside segment's descriptor, the physical base address (the starting physical address) of the requested segment can be found, the processor obtains this base address and adds the `32-bit` offset from the logical memory address to the base address to obtain the last result, which is the linear memory address.
 
-During this operation, the processor uses the other information in the segment descriptor to enforce the policies of memory protection. One of these policies is defined by the *limit* of a segment which specifies its size, if the generated code refers to an offset which exceeds the limit of the segment, the processor should stop this operation. For example, assume hypothetically that the running code has the privilege to read data from data segment `A` and in the physical memory another data segment `B` is defined right after the limit of `A`, which means if we can exceed the limit of `A` we will able to access the data inside `B` which is a critical data segment that stores kernel's internal data structures and we don't want any code to read from it or write to it in case this code is not privileged to do so. This can be achieved by specifying the limit of `A` correctly, and when the unprivileged code tries maliciously to read from `B` by generating a logical memory address that has an offset which exceeds the limit of `A` the processor prevents the operation and protects the content of segment `B`. 
+- During this operation, the processor uses the other information in the segment descriptor to enforce the policies of memory protection. 
+  - One of these policies is defined by the *limit* of a segment which specifies its size, 
+  - if the generated code refers to an offset which exceeds the limit of the segment, the processor should stop this operation. 
+  - For example, assume hypothetically that the running code has the privilege to read data from data segment `A` and in the physical memory another data segment `B` is defined right after the limit of `A`, which means if we can exceed the limit of `A` we will able to access the data inside `B` which is a critical data segment that stores kernel's internal data structures and we don't want any code to read from it or write to it in case this code is not privileged to do so.
+  - This can be achieved by specifying the limit of `A` correctly, and when the unprivileged code tries maliciously to read from `B` by generating a logical memory address that has an offset which exceeds the limit of `A` the processor prevents the operation and protects the content of segment `B`. 
 
-The limit, or in other words, the size of a given segment is stored in the `20` bits *segment limit field* of that segment descriptor and how the processor interprets the value of segment limit field depends on the *granularity flag* (G flag) which is also stored in the segment's descriptor, when the value of this flag is `0` then the value of the limit field is interpreted as bytes, let's assume that the limit of a given segment is `10` and the value of granularity flag is `0`, that means the size of this segment is `10` **bytes**. On the other hand, when the value of granularity flag is `1`, the value of segment limit field will be interpreted as of `4KB` units, for example, assume in this case that the value of limit field is also `10` but G flag = `1`, that means the size of the segment will be `10` of `4KB` units, that is, `10 * 4KB` which gives us `40KB` which equals `40960` bytes. 
+- The limit, or in other words, the size of a given segment is stored in the `20` bits **segment limit field** of that segment descriptor and 
+- how the processor interprets the value of segment limit field depends on the **granularity flag** (G flag) which is also stored in the segment's descriptor,
+  - when the value of this flag is `0` then the value of the limit field is interpreted as bytes, 
+    - let's assume that the limit of a given segment is `10` and the value of granularity flag is `0`, that means the size of this segment is `10 bytes`.
+  - On the other hand, when the value of granularity flag is `1`, the value of segment limit field will be interpreted as of `4KB` units, 
+    - for example, assume in this case that the value of limit field is also `10` but G flag = `1`, that means the size of the segment will be `10` of `4KB` units, that is, `10 * 4KB` which gives us `40KB` which equals `40960` bytes. 
 
-Because the size of segment limit field is `20` bits, that means the maximum numeric value it can represent is `2^20 = 1,048,576`, which means if G flag equals `0` then the maximum size of a specific segment can be `1,048,576` **bytes** which equals `1MB`, and if G flag equals `1` then the maximum size of a specific segment can be `1,048,576` of `4KB` units which equals `4` **GB**.
+- Because the size of segment limit field is `20` bits, that means the maximum numeric value it can represent is `2^20 = 1,048,576`, 
+  - which means if G flag equals `0` then the maximum size of a specific segment can be `1,048,576` **bytes** which equals `1MB`,
+  - and if G flag equals `1` then the maximum size of a specific segment can be `1,048,576` of `4KB` units which equals `4` **GB**.
 
-Getting back to the structure of descriptor, the bytes `2`, `3` and `4` of the descriptor store the *least significant bytes* of segment's base address and the byte `7` of the descriptor stores the *most significant byte* of the base address, the total is `32` bits for the base address. The bytes `0` and `1` of the descriptor store the *least significant bytes* of segment's limit and byte `6` stores the *most significant byte* of the limit. The granularity flag is stored in the most significant **bit** of the the byte `6` of the descriptor.
+- Getting back to the structure of descriptor, 
+  - the bytes `2`, `3` and `4` of the descriptor store the **least significant bytes of segment's base address** 
+  - the byte `7` of the descriptor stores the **most significant byte** of the base address, 
+  - the total is `32` bits for the base address.
+  - the bytes `0` and `1` of the descriptor store the **least significant bytes of segment's limit** and
+  - byte `6` stores the *most significant byte* of the limit. 
+  - the granularity flag is stored in the most significant **bit** of the the byte `6` of the descriptor.
 
-Before finishing this subsection, we need to define the meaning of *least significant* and *most significant* byte or bit. Take for example the following binary sequence which may represent anything, from a memory address value to a `UTF-32` character.
+- the meaning of *least significant* and *most significant* byte or bit, take for example the following binary sequence which may represent anything, from a memory address value to a `UTF-32` character.
+- **0**111 0101 0000 0000 0000 0000 0100 110*1*
+  - You can see the first bit from left is on bold format and its value is `0`, based on its position in the sequence we call this bit the *most significant bit* or *high-order bit*, 
+  - while the last bit on the right which is in italic format and its value is `1` is known as *least significant bit* or *low-order bit*. 
+- The same terms can be used on byte level, given the same sequence with different formatting.
+- **0111 0101** 0000 0000 0000 0000 *0100 1101*
+  - The first byte (`8` bits) on the left which is in bold format and its value is `0111 0101` is known as *most significant byte* or *high-order byte* 
+  - while the last byte on the right which is on italic format and its value is `0100 1101` is known as *least significant byte* or *low-order byte*.
 
-**0**111 0101 0000 0000 0000 0000 0100 110*1*
+  - Now, imagine that this binary sequence is the base address of a segment, then the least significant `3` bytes of it will be stored in bytes `2`, `3` and `4` of the descriptor, that is, the following binary sequence.
 
-You can see the first bit from left is on bold format and its value is `0`, based on its position in the sequence we call this bit the *most significant bit* or *high-order bit*, while the last bit on the right which is in italic format and its value is `1` is known as *least significant bit* or *low-order bit*. The same terms can be used on byte level, given the same sequence with different formatting.
+    ```{.asm}
+    0000 0000 0000 0000 0100 1101
+    ```
+  - While the most significant byte of the binary sequence will be stored in the `7th` byte of the descriptor, that is, the following binary sequence.
 
-**0111 0101** 0000 0000 0000 0000 *0100 1101*
-
-The first byte (`8` bits) on the left which is in bold format and its value is `0111 0101` is known as *most significant byte* or *high-order byte* while the last byte on the right which is on italic format and its value is `0100 1101` is known as *least significant byte* or *low-order byte*.
-
-Now, imagine that this binary sequence is the base address of a segment, then the least significant `3` bytes of it will be stored in bytes `2`, `3` and `4` of the descriptor, that is, the following binary sequence.
-
-```{.asm}
-0000 0000 0000 0000 0100 1101
-```
-
-While the most significant byte of the binary sequence will be stored in the `7th` byte of the descriptor, that is, the following binary sequence.
-
-```{.asm}
-0111 0101
-```
+    ```{.asm}
+    0111 0101
+    ```
 
 ##### Segment's Type
-Given any binary sequence, it doesn't have any meaning until some context is added. For example, what does the binary sequence `1100 1111 0000 1010` represents? It could represent anything, a number, characters, pixels on an image or even all of them based on how its user interprets it. When an agent (e.g. a bunch of code in running software or the processor) works with a binary sequence, it should know what does this binary sequence represent to be able to perform useful tasks. In the same manner, when a segment is defined, the processor (the agent) should be told how to interpret the content inside this segment, that is, the type of the segment should be known by the processor.
+- Given any binary sequence, it doesn't have any meaning until some context is added. 
+  - For example, what does the binary sequence `1100 1111 0000 1010` represents? It could represent anything, a number, characters, pixels on an image or even all of them based on how its user interprets it.
+  - When an agent (e.g. a bunch of code in running software or the processor) works with a binary sequence, it should know what does this binary sequence represent to be able to perform useful tasks.
+  - In the same manner, when a segment is defined, the processor (the agent) should be told how to interpret the content inside this segment, that is, the type of the segment should be known by the processor.
 
-Till this point, you probably noticed that there is at least two types of segments, code segment and data segment. The content of the former should be machine code that can be executed by the processor to perform some tasks, while the content of the latter should be data (e.g. values of constants) that can be used by a running code. These two types of segments (code and data) belong to the category of *application segments*, there is another category of segment types which is the category of *system segments* and it has many different segment types belong to it.
+- Till this point, you probably noticed that there is at least two types of segments, code segment and data segment. 
+  - The content of the former should be machine code that can be executed by the processor to perform some tasks,
+  - while the content of the latter should be data (e.g. values of constants) that can be used by a running code.
+- These two types of segments (code and data) belong to the category of **application segments**, there is another category of segment types which is the category of **system segments** and it has many different segment types belong to it.
 
-Whether a specific segment is an application or system segment, this should be mentioned in the descriptor of the segment in a flag called *S flag* or *descriptor type flag* which is the fifth **bit** in **byte** number `5` of the segment descriptor. When the value of S flag is `0`, then the segment is considered as a system segment, while it is considered as an application segment when the value of S flag is `1`. Our current focus is on the latter case.
-
-As we have mentioned before, an application segment can be either code or data segment. Let's assume some application segment has been referenced by a currently running code, the processor is going to consult the descriptor of this segment, and by reading the value of S flag (which should be `1`) it will know that the segment in question is an application segment, but which of the two types? Is it a code segment or data segment? To answer this question for the processor, this information should be stored in a field called *type field* in the segment's descriptor.
-
-Type field in segment descriptor is the first `4` bits (nibble) of the fifth byte and the most significant bit specifies if the application segment is a code segment (when the value of the bit is `1`) or a data segment (when the value of the bit is `0`). Doesn't matter if the segment is a code or data segment, in the both cases the least significant bit of type field indicates if the segment is *accessed* or not, when the value of this flag is `1`, that means the segment has been written to or read from (AKA: accessed), but if the value of this flag is `0`, that means the segment has not been accessed. The value of this flag is manipulated by the processor in one situation only, and that's happen when the selector of the segment in question is loaded into a segment register. In any other situation, it is up to the operating system to decide the value of accessed flag. According to Intel's manual, this flag can be used for virtual memory management and for debugging.
+- Whether a specific segment is an application or system segment, this should be mentioned in the descriptor of the segment in a flag called **S flag** or **descriptor type flag** which is the fifth **bit** in **byte** number `5` of the segment descriptor.
+  - When the value of S flag is `0`, then the segment is considered as a system segment, while it is considered as an application segment when the value of S flag is `1`. Our current focus is on the latter case.
+  - As we have mentioned before, an application segment can be either code or data segment.
+- Let's assume some application segment has been referenced by a currently running code, the processor is going to consult the descriptor of this segment, and by reading the value of S flag (which should be `1`) it will know that the segment in question is an application segment, but which of the two types? code segment or data segment? 
+- To answer this question for the processor, this information should be stored in a field called **type field** in the segment's descriptor.
+  - Type field in segment descriptor is the first `4` bits (nibble) of the 5^th^ byte
+  - the most significant bit specifies if the application segment is a code segment (when the value of the bit is `1`) or a data segment (when the value of the bit is `0`).
+  - in the both cases whether the segment is a code or data segment, the least significant bit of type field indicates if the segment is *accessed* or not,
+    - when the value of this flag is `1`, that means the segment has been written to or read from (AKA: accessed),
+    - but if the value of this flag is `0`, that means the segment has not been accessed.
+    - The value of this flag is manipulated by the processor in one situation only, and that's happen when the selector of the segment in question is loaded into a segment register.
+    - In any other situation, it is up to the operating system to decide the value of accessed flag.
+    - According to Intel's manual, this flag can be used for virtual memory management and for debugging.
 
 ###### Code Segment Flags
-When the segment is a code segment, the second most significant bit (tenth bit) is called *conforming flag* (also called `C` flag) while the third most significant bit (ninth bit) called *read-enabled flag* (also called `R` flag.). Let's start our discussion with the simplest among those two flags which is the read-enabled flag. The value of this flag indicates how the code inside the segment in question can be used, when the value of read-enabled flag is `1` ^[Which means **do** enable read, since `1` is equivalent to `true` in the context of flags.], that means the content of the code segment can be executed **and** read from, but when the value of this flag is `0` ^[Which means **don't** enable read.] that means the content of the code segment can be **only** executed and cannot read from. The former option can be useful when the code contains data inside it (e.g. constants) and we would like to provide the ability of reading this data. When read is enabled for the segment in question, the selector of this segment can also be loaded into one of data segment registers ^[Which makes sense, enabling reads from a code segment means it contains data also.].
+- When the segment is a code segment,
+  - the second most significant bit (tenth bit) is called **conforming flag** (also called `C` flag)
+  - while the third most significant bit (ninth bit) called **read-enabled flag** (also called `R` flag).
+- The read-enabled flag value indicates how the code inside the segment in question can be used,
+  - when the value of read-enabled flag is `1`, the content of the code segment can be executed **and** read from,
+  - but when the value of this flag is `0` the content of the code segment can be **only** executed and cannot read from.
+    -  1 means **do** enable read, since `1` is equivalent to `true` in the context of flags and 0, which means `false`, is **don't** enable read.
+  - Setting the flag to 1 can be useful when the code contains data inside it (e.g. constants) and we would like to provide the ability of reading this data.
+    - When read is enabled for the segment in question, the selector of this segment can also be loaded into one of data segment registers 
+    - Which makes sense, enabling reads from a code segment means it contains data also.
 
-The conforming flag is related to the privilege levels that we had an overview about them previously in this chapter. When a segment is conforming, in other words, the value of conforming flag is `1`, that means a code which runs in a less-privileged level can call this segment which runs in a higher privileged level while keeping the current privilege level of the environment same as the one of the caller instead of the callee.
-
-For example, let's assume for some reason a kernel's designer decided to provide simple arithmetic operations (such as addition and subtraction) for user applications from the kernel code, that is, there is no other way to perform these operations in that system but this code which is provided by the kernel. As we know, kernel's code should run in privilege level `0` which is the most-privileged level, and let's assume a user application which runs in privilege level `3`, a less-privileged level, needs to perform an addition operation, in this case a kernel code, which should be protected by default from being called by less-privileged code, should be called to perform the task, this can only realized if the code of addition operation is provided as a conforming segment, otherwise the processor is going to stop this action where a less-privileged code calls a more-privileged code. 
-
-Also you should note that the code of addition operation is going to run in privilege level `3` although it is a part of the kernel which runs in privilege level `0` and that's because of the original caller which runs in the privilege level `3`. Furthermore, although conforming segment can be called by a less-privilege code (e.g. user application calls the kernel), the opposite cannot be done (e.g. the kernel calls a user application's code) and the processor is going to stop the operation.
+- The conforming flag is related to the privilege levels that we had an overview about them previously in this chapter.
+- When a segment is conforming, in other words, the value of conforming flag is `1`, that means a code which runs in a less-privileged level can call this segment which runs in a higher privileged level while keeping the current privilege level of the environment same as the one of the caller instead of the callee.
+  - For example, let's assume for some reason a kernel's designer decided to provide simple arithmetic operations (such as addition and subtraction) for user applications from the kernel code, that is, there is no other way to perform these operations in that system but this code which is provided by the kernel.
+  - As we know, kernel's code should run in privilege level `0` which is the most-privileged level, and let's assume a user application which runs in privilege level `3`, a less-privileged level, needs to perform an addition operation,
+    - in this case a kernel code, which should be protected by default from being called by less-privileged code, should be called to perform the task, this can only realized if the code of addition operation is provided as a conforming segment, otherwise the processor is going to stop this action. 
+    - Also note that the code of addition operation is going to run in privilege level `3` although it is a part of the kernel which runs in privilege level `0` and that's because of the original caller which runs in the privilege level `3`.
+    - Furthermore, although conforming segment can be called by a less-privilege code (e.g. user application calls the kernel), the opposite cannot be done (e.g. the kernel calls a user application's code) and the processor is going to stop the operation.
 
 ###### Data Segment Flags
-When the segment is data segment, the second most significant bit (tenth bit) is called expansion-direction flag (also called `E` flag) while the third most significant bit (ninth bit) is called write-enabled flag (also called `W` flag). The latter one gives us the ability to make some data segment a read-only when its value is `0`, or we can make a data segment both **writable** and readable by setting the value of write-enabled flag to `1`.
+- When the segment is data segment,
+  - the second most significant bit (tenth bit) is called **expansion-direction flag** (also called `E` flag)
+  - while the third most significant bit (ninth bit) is called **write-enabled flag** (also called `W` flag).
+  - `W` gives us the ability to make some data segment a read-only when its value is `0`, or we can make a data segment both **writable** and readable by setting the value of write-enabled flag to `1`.
 
-While the expansion-direction flag and its need will be examined in details when we discuss x86 run-time stack in this chapter, what we need to know right now is that when the value of this flag is `0`, the data segment is going to expand **up** (in Intel's terms), but when the value of this flag is `1`, the data segment is going to expand **down** (in Intel's terms).
+- While the expansion-direction flag and its need will be examined in details when we discuss x86 run-time stack in this chapter, what we need to know right now is that
+- when the value of this flag is `0`, the data segment is going to expand **up** (in Intel's terms),
+- but when the value of this flag is `1`, the data segment is going to expand **down** (in Intel's terms).
 
-A last note about data segments is that all of them are **non-conforming**, that is, a less-privileged code cannot access a data segment in a more-privileged level. Furthermore, all data segments can be accessed by a more-privileged code.
+- A last note about data segments is that all of them are **non-conforming**, that is, a less-privileged code cannot access a data segment in a more-privileged level.
+- Furthermore, all data segments can be accessed by a more-privileged code.
 
 ##### Segment's Privilege Level
-In our previous discussions, we have stated that a specific segment should belong to a privilege level and based on this privilege level the processor decides the protection properties of the segment in question, for example, whether that segment is a kernel-mode or user-mode segment and which privilege level a running code should belong to in order to be able to reach to this segment
+- In our previous discussions, we have stated that a specific segment should belong to a privilege level and based on this privilege level the processor decides the protection properties of the segment in question,
+  - for example, whether that segment is a kernel-mode or user-mode segment and which privilege level a running code should belong to in order to be able to reach to this segment
 
-A field called *descriptor privilege level* (DPL) in segment descriptor is where the operating system should set the privilege level of a given segment. The possible values of this field, as we know, are `0`, `1`, `2` and `3`, we have already discussed the meanings of these values previously in this chapter. Descriptor privilege level field occupies the second and third most significant bits of byte `5` in a descriptor.
+- A field called **descriptor privilege level** (DPL) in segment descriptor is where the operating system should set the privilege level of a given segment.
+  - The possible values of this field, as we know, are `0`, `1`, `2` and `3`
+  - Descriptor privilege level field occupies the second and third most significant bits of byte `5` in a descriptor.
 
 ##### Segment's Present
-One of common operations that is performed in a running system is loading data from secondary storage (e.g. hard disk) into the memory and one example of that is loading a program code into the memory when the user of the system request to run an instance of a program, so, creating a new segment descriptor (hence, creating new segment in the memory) for this data may precede the completion of loading the data into the main memory, therefore, there could be some segment descriptors in the system that points to memory locations that don't contain the real data yet. 
-
-In this case, we should tell the processor that the data in the memory location that a specific descriptor points to is not the real data, and the real segment is not presented in the memory yet, this helps the processor to generate error when some code tries to access ^[We use the term *access* here for both types of application segments. While this term is valid for data segment, we mean *execute* for code segment.] the segment's data. To tell the processor whether a segment is presented in the memory or not, *segment-present flag* (P flag) can be used, when its value is `1` that means the segment is present in memory, while the value `0` means the segment is not present in memory, this flag is the most significant bit of byte `5` of a descriptor.
+- One of common operations that is performed in a running system is loading data from secondary storage (e.g. hard disk) into the memory
+  - one example of that is loading a program code into the memory when the user of the system request to run an instance of a program,
+- so, creating a new segment descriptor (hence, creating new segment in the memory) for this data may precede the completion of loading the data into the main memory, therefore, there could be some segment descriptors in the system that points to memory locations that don't contain the real data yet. 
+  - In this case, we should tell the processor that the data in the memory location that a specific descriptor points to is not the real data, and the real segment is not presented in the memory yet,
+  - this helps the processor to generate error when some code tries to access the segment's data.
+    - We use the term *access* here for both types of application segments. While this term is valid for data segment, we mean *execute* for code segment.
+  - To tell the processor whether a segment is presented in the memory or not, **segment-present flag** (P flag) can be used,
+    - when its value is `1` that means the segment is present in memory,
+    - while the value `0` means the segment is not present in memory,
+    - this flag is the most significant bit of byte `5` of a descriptor.
 
 ##### Other Flags
-We have covered all segment's descriptor fields and flags but three flags. The name of the first one changes depending on the type of the segment and it occupies the second most significant bit in the byte `6`. When the segment in question is a code segment, this flag is called *default operation size* (D flag). When the processor executes the instructions it uses this flag to decide the length of the operands, depending on the currently executing instruction, if the value of D flag is `1` the processor is going to assume the operand has the size of `32` bits if it is a memory address, and `32` bits or `8` bits if it is not a memory address. If the value of D flag is `0` the processor is going to assume the operand has the size of `16` bits if it is a memory address, and `16` bits or `8` bits operand if it is not a memory address. 
+- Three flags remain.
+- The name of the first one changes depending on the type of the segment 
+  - it occupies the 2^nd^ most significant bit in the byte `6`. When the segment in question is a code segment,
+  - this flag is called **default operation size** (D flag).
+  - When the processor executes the instructions it uses this flag to decide the length of the operands,
+  - depending on the currently executing instruction, if the value of D flag is `1`
+    - the processor is going to assume the operand has the size of `32` bits if it is a memory address,
+    - `32` bits or `8` bits if it is not a memory address. 
+  - If the value of D flag is `0`
+    - the processor is going to assume the operand has the size of `16` bits if it is a memory address,
+    - `16` bits or `8` bits operand if it is not a memory address. 
+  - When the segment in question is a stack segment [The processor knows it is a stack segment if the segment selector is loaded into stack segment selector register `SS`], the same flag is called **default stack pointer size** (B flag),
+    - it decides the size of the memory address (as a value) which points to the stack,
+    - this memory address is known as *stack pointer* and
+    - it is being used implicitly by stack instructions such as `push` and `pop`.
+    - When the value of B flag is `1`,
+      - then the size of stack pointer will be `32` bits and its value will be stored in the register `ESP` (rather then `SP`),
+      - When the value of B flag is `0`, then the size of stack pointer will be `16` bits and its value will be stored in the register `SP` (rather then `ESP`). 
 
-When the segment in question is a stack segment ^[The processor knows it is a stack segment if the segment selector is loaded into stack segment selector register `SS`], the same flag is called *default stack pointer size* (B flag), and it decides the size of the memory address (as a value) which points to the stack, this memory address is known as *stack pointer* and it is being used implicitly by stack instructions such as `push` and `pop`. When the value of B flag is `1`, then the size of stack pointer will be `32` bits and its value will be stored in the register `ESP` (rather then `SP`), When the value of B flag is `0`, then the size of stack pointer will be `16` bits and its value will be stored in the register `SP` (rather then `ESP`). 
+  - When the segment in question is a data segment that grows upward, this flag is called **upper bound flag** (B flag),
+    - when its value is `1` the maximum possible size of the segment will be `4GB`,
+    - otherwise, the maximum possible size of the segment will be `64KB`.
+  - the value of this flag (D/B flag) **should** be `1` for `32-bit` code and data segments (stack segments are included of course) and it should be `0` for `16-bit` code and data segments.
 
-When the segment in question is a data segment that grows upward, this flag is called *upper bound flag* (B flag), when its value is `1` the maximum possible size of the segment will be `4GB`, otherwise, the maximum possible size of the segment will be `64KB`. Anyway, the value of this flag (D/B flag) **should** be `1` for `32-bit` code and data segments (stack segments are included of course) and it should be `0` for `16-bit` code and data segments.
+- The second flag is known as **64-bit code segment flag** (L flag)
+  - it is the third most significant bit in the byte `6` and from its name we can tell that this flag is related to code segments.
+    - If the value of this flag is `1` that means the code inside the segment in question is a `64-bit` code
+    - while the value `0` means otherwise [In terms of Intel's manual: *compatibility mode*.].
+- When we set the value of L flag to `1` the value of D/B flag should be `0`.
 
-The second flag is known as *64-bit code segment flag* (L flag) which is the third most significant bit in the byte `6` and from its name we can tell that this flag is related to code segments. If the value of this flag is `1` that means the code inside the segment in question is a `64-bit` code while the value `0` means otherwise ^[In terms of Intel's manual: *compatibility mode*.]. When we set the value of L flag to `1` the value of D/B flag should be `0`.
-
-The final flag is the fourth most significant bit in the byte `6`, the value of this flag has no meaning for the processor, hence, it will not use it to make any decisions upon the segment in the question as we have seen on all other flags and fields. On the other hand, this flag is available for the operating system to use it in whatever way it needs, or just ignores it by set it to any of possible values ,`0` or `1` since it is one bit.
+- The final flag is 
+  - the fourth most significant bit in the byte `6`,
+  - the value of this flag has no meaning for the processor, hence, it will not use it to make any decisions upon the segment in the question as we have seen on all other flags and fields.
+  - On the other hand, this flag is available for the operating system to use it in whatever way it needs, or just ignores it by set it to any of possible values ,`0` or `1` since it is one bit.
 
 #### The Special Register `GDTR`
-The special register `GDTR` stores the base physical address ^[More accurately, the linear address. Refer to discussion of memory translation process in this chapter.] of the global descriptor table, that is, the starting point of `GDT` table. Also, the same register stores the limit (or size) of the table. 
+- The special register `GDTR` stores the base physical address [More accurately, the linear address] of the global descriptor table, or the starting point of `GDT` table. 
+  - the same register also stores the limit (or size) of the table. 
 
-![GDTR Structure](Figures/x86-ch/Fig16062021_0.png){#fig:16062021_0 width=50%}
+  ![GDTR Structure](/assets/Fig16062021_0.png)
 
-To load a value into the register `GDTR` the x86 instruction `lgdt`, which stands for *load* global descriptor table, should be used. This instruction takes one operand which is the whole value that should be loaded into `GDTR`, the structure of this value should be similar to the structure of `GDTR` itself which is shown in figure @fig:16062021_0. The figure shows that the total size of `GDTR` is `48` bits divided into two parts. The first part starts from bit `0` (the least significant bit) to bit `15`, this part contains the limit of `GDT` table that we would like to load. The size of this part of `GDTR` register is `16` bits which can represent the value `65,536` at maximum, that means the maximum size of `GDT` table can be `64KB = 65,536 Bytes / 1024`, and as we know, the size of each of descriptor is `8` bytes, that means the `GDT` table can hold `8,192` descriptors at most. The second part of `GDTR` starts from bit `16` to bit `47` (the most significant bit) and stores the base memory address of `GDT` table that we would like to load.
+- To load a value into the register `GDTR` the x86 instruction `lgdt`, which stands for *load* global descriptor table, should be used. This instruction takes one operand which is the whole value that should be loaded into `GDTR`, the structure of this value should be similar to the structure of `GDTR` itself which is shown in figure @fig:16062021_0. The figure shows that the total size of `GDTR` is `48` bits divided into two parts. The first part starts from bit `0` (the least significant bit) to bit `15`, this part contains the limit of `GDT` table that we would like to load. The size of this part of `GDTR` register is `16` bits which can represent the value `65,536` at maximum, that means the maximum size of `GDT` table can be `64KB = 65,536 Bytes / 1024`, and as we know, the size of each of descriptor is `8` bytes, that means the `GDT` table can hold `8,192` descriptors at most. The second part of `GDTR` starts from bit `16` to bit `47` (the most significant bit) and stores the base memory address of `GDT` table that we would like to load.
 
 #### Local Descriptor Table
 The global descriptor table is a system-wide table, in other words, it is available for every process of the system. In addition to `GDT`, x86 provides us with ability to define *local descriptor tables* (`LDT`) in protected-mode which have the same functionality and structure of `GDT`. 
@@ -407,12 +509,12 @@ Let's assume that we need to create a new `LDT` table for process `A` which is c
 
 In our previous discussion of `S` flag we mentioned that this flag tells the processor whether a defined segment is an application segment (S flag = `1`) or a system segment (S flag = `0`), the segment of the memory that contains an `LDT` table is considered as a system segment, that is, the value of `S` flag in the descriptor that describes an `LDT` table should be `0` and because there are other types of system segments than `LDT` then we should tell the processor this system segment is an `LDT` table, to do that we should use the type field of the descriptor that we already mentioned, the value of this field should be `0010b` (`2d`) for descriptors that describe an `LDT` table, how the processor can tell which table should currently used for a given segment `GDT` or `LDT` will be discussed in the next subsection.
 
-The x86 instruction `lldt` is used to load the `LDT` table that we would like to use now into a special register named `LDTR` which is a `16-bit` register that should contain the segment selector ^[More accurate definition of a segment selector and its structure in protected-mode is presented in the next subsection.] in `GDT` of the `LDT` table that we would like to use, in other words, the index of segment descriptor which describe the `LDT` table and which reside in `GDT` as an entry should be loaded into `LDTR` register.
+The x86 instruction `lldt` is used to load the `LDT` table that we would like to use now into a special register named `LDTR` which is a `16-bit` register that should contain the segment selector [More accurate definition of a segment selector and its structure in protected-mode is presented in the next subsection.] in `GDT` of the `LDT` table that we would like to use, in other words, the index of segment descriptor which describe the `LDT` table and which reside in `GDT` as an entry should be loaded into `LDTR` register.
 
 #### Segment Selector
 As we know, the index (offset) of the descriptor that the currently running code needs to use, whether this descriptor defines and code or data segment, should be loaded into one of segment registers, but how the can the processor tell if this index which is loaded into a segment register is an index in the `GDT` or `LDT`? 
 
-![Segment Selector Structure](Figures/x86-ch/Fig17062021_0.png){#fig:17062021_0 width=50%}
+![Segment Selector Structure](/assets/Fig17062021_0.png){#fig:17062021_0 width=50%}
 
 When we discussed segment selectors previously in this chapter we have said that our definition of this concept is a **relaxed** definition, that is, a simplified one that omits some details. In reality, the index of a segment descriptor is just one part of a segment selector, figure @fig:17062021_0 shows the structure of a segment selector, which is same as the structure of all segment registers `CS`, `SS`, `DS`, `ES`, `FS` and `GS`. We can see from the figure that the size of a segment selector is `16` bits and starting from the least significant bit (bit `0`), the first two bits `0` and `1` are occupied by field known as *requester privilege level* (`RPL`). Bit `2` is occupied by a flag named *table indicator* (`TI`), and finally, the index of a segment descriptor occupies the field from bit `3` until bit `15` of the segment selector. The index field (descriptor offset) is already well-explained in this chapter, so we don't need to repeat its details. 
 
@@ -435,17 +537,17 @@ Run-time stack is used to store the values of local variables and function param
 ### The Theory: Stack Data Structure
 Typically, a *data structure* as a concept is divided into two components, the first one is the way of storing the data in a high-level terms, a data structure is not concerned about how to store the data in low-level (e.g as bits, or bytes. In the main memory or on the disk, etc.). But it answers the question of storing data as a high-level concept (as we will see in stack example) without specifying the details of implementation and due to that, they are called *abstract data structures*. The second component of a data structure is the available operations to manipulate the stored data. Of course, the reason of the existence of each data structure is to solve some kind of problem. 
 
-In stack data structure, the data will be stored in first-in-last-out (FILO) manner ^[On contrary, *queue data structure* stores data in first-in-**first**-out (FIFO) manner.], that is, the first entry which is stored in the stack can be fetched out of the stack at last. The operations of stack data structure are two: *push* and *pop* ^[That doesn't mean no more operations can be defined for a given data structure in the implementation level. It only means that the conceptual perspective for a given data structure defines those basic operations which reflect the spirit of that data structure. Remember that when we start to use x86 run-time stack with more operations than `push` and `pop` later, though those other operations are not canonical to the stack data structure, but they can be available if the use case requires that (and yes they may violate the spirit of the given data structure! We will see that later).], the first one puts some value on the *top of the stack*, which means that the top of stack always contains the last value that have been inserted (pushed) into a stack. The latter operation `pop` **removes** the value which resides on the top of the stack and returns it to the user, that means the most recent value that has been `push`ed to the stack will be fetched when we `pop` the stack. 
+In stack data structure, the data will be stored in first-in-last-out (FILO) manner [On contrary, *queue data structure* stores data in first-in-**first**-out (FIFO) manner.], that is, the first entry which is stored in the stack can be fetched out of the stack at last. The operations of stack data structure are two: *push* and *pop* [That doesn't mean no more operations can be defined for a given data structure in the implementation level. It only means that the conceptual perspective for a given data structure defines those basic operations which reflect the spirit of that data structure. Remember that when we start to use x86 run-time stack with more operations than `push` and `pop` later, though those other operations are not canonical to the stack data structure, but they can be available if the use case requires that (and yes they may violate the spirit of the given data structure! We will see that later).], the first one puts some value on the *top of the stack*, which means that the top of stack always contains the last value that have been inserted (pushed) into a stack. The latter operation `pop` **removes** the value which resides on the top of the stack and returns it to the user, that means the most recent value that has been `push`ed to the stack will be fetched when we `pop` the stack. 
 
-![A Stack with Two Values `A` and `B` Pushed Respectively.](Figures/x86-ch/abcd-stack-step1.png){#fig:abcd-stack-step1 width=35%}
+![A Stack with Two Values `A` and `B` Pushed Respectively.](/assets/abcd-stack-step1.png){#fig:abcd-stack-step1 width=35%}
 
 Let's assume that we have the string `ABCD` and we would like to push each character separately into the stack. First we start with the operation `push A` which puts the value `A` on the top of the stack, then we execute the operation `push B` which puts the value `B` on top of the value `A` as we can see in the figure @fig:abcd-stack-step1, that is, the value `B` is now on the top of the stack and not the value `A`, the same is going to happen if we push the value `C` next as you can see in the figure @fig:abcd-stack-step2 and the same for the value of `D` and you can see the final stack of these four push operations in figure @fig:abcd-stack-step3. 
 
-![A Stack with Three Values `A`, `B` and `C` Pushed Respectively.](Figures/x86-ch/abcd-stack-step2.png){#fig:abcd-stack-step2 width=35%}
+![A Stack with Three Values `A`, `B` and `C` Pushed Respectively.](/assets/abcd-stack-step2.png){#fig:abcd-stack-step2 width=35%}
 
-![A Stack with Four Values `A`, `B`, `C` and `D` Pushed Respectively.](Figures/x86-ch/abcd-stack-step3.png){#fig:abcd-stack-step3 width=35%}
+![A Stack with Four Values `A`, `B`, `C` and `D` Pushed Respectively.](/assets/abcd-stack-step3.png){#fig:abcd-stack-step3 width=35%}
 
-Now let's assume that we would like to read the values from this stack, the only way to read data in stack data structure is to use the operation `pop` which, as we have mentioned, removes the value that resides on the top of the stack and returns it to the user, that is, the stack data structure in contrary of array data structure ^[Which is implemented by default in most major programming languages and know as arrays (in C for example) or lists (as in Python)] doesn't have the property of *random access* to the data, so, if you want to access any data in the stack, you can only use `pop` to do that. That means if you want to read the first pushed value to the stack, then you need to `pop` the stack `n` times, where `n` is the number of pushed elements into the stack, in other words, the size of the stack.
+Now let's assume that we would like to read the values from this stack, the only way to read data in stack data structure is to use the operation `pop` which, as we have mentioned, removes the value that resides on the top of the stack and returns it to the user, that is, the stack data structure in contrary of array data structure [Which is implemented by default in most major programming languages and know as arrays (in C for example) or lists (as in Python)] doesn't have the property of *random access* to the data, so, if you want to access any data in the stack, you can only use `pop` to do that. That means if you want to read the first pushed value to the stack, then you need to `pop` the stack `n` times, where `n` is the number of pushed elements into the stack, in other words, the size of the stack.
 
 In our example stack, to be able to read the first pushed value which is `A` you need to `pop` the stack four times, the first one removes the value `D` from the top of stack and returns it to the user, which makes the values `C` on the top of stack as you can see in figure @fig:abcd-stack-step2 and if we execute `pop` once again, the value `C` will be removed from the top of the stack and returns it to the user, which makes the value `B` on the top of the stack as you can see in figure @fig:abcd-stack-step1, so we need to `pop` the stack two times more the get the first `push`ed value which is `A`. This example makes it obvious for us why the stack data structure is described as first-in-last-out data structure.
 
@@ -456,15 +558,15 @@ As you can see in this brief explanation of stack data structure, we haven't men
 ### The Implementation: x86 Run-time Stack
 Now, with our understanding of the theoretical aspect of stack data structure, let's see how the run-time stack is implemented in x86 architecture to be used for the objectives that we have mentioned in the beginning of the subsection. As we have said earlier, the reason of x86 run-time stack's existence is to provide a way to implement function's invocation, that is, the lifecycle of functions. Logically, we know that a program consists of multiple functions (or *routines* which is another term that is used to describe the same thing) and when executing a program (a process), a number of these functions (not necessarily all of them) should be called to fulfill the required job. 
 
-In run-time context, a function `B` starts its life when it's called by another function `A`, so, the function `A` is the *caller*, that is, the function that originated the call, and the function `B` is the *callee*. The caller can pass a bunch of parameters to the callee which can reach the value of these parameters while it's running, the callee can define its own local variables which should not be reached by any other function, that means that these variables can be removed from the memory once the callee finishes its job. When the callee finishes its job, it may *return* some value to the caller ^[Some programming languages, especially those which are derived from Algol differentiate between a *function* which **should** return a value to the caller, and a *procedure* which **shouldn't** return a value to the caller.]. Finally, the run-time platform (the processor in the case of compiled languages) should be able to know, when the callee finishes, where is the place of the code that should be executed next, and logically, this place is the line in the source code of the caller function which is next to the line that called the callee in the first place.
+In run-time context, a function `B` starts its life when it's called by another function `A`, so, the function `A` is the *caller*, that is, the function that originated the call, and the function `B` is the *callee*. The caller can pass a bunch of parameters to the callee which can reach the value of these parameters while it's running, the callee can define its own local variables which should not be reached by any other function, that means that these variables can be removed from the memory once the callee finishes its job. When the callee finishes its job, it may *return* some value to the caller [Some programming languages, especially those which are derived from Algol differentiate between a *function* which **should** return a value to the caller, and a *procedure* which **shouldn't** return a value to the caller.]. Finally, the run-time platform (the processor in the case of compiled languages) should be able to know, when the callee finishes, where is the place of the code that should be executed next, and logically, this place is the line in the source code of the caller function which is next to the line that called the callee in the first place.
 
-In x86, each process has its own run-time stack ^[We claim that for the purpose of explanation. But actually the matter of separated run-time stack for each process is a design decision that the operating system's kernel programmer/designer is responsible for.], we can imagine this run-time stack as a big (or even small, that depends on practical factors) memory region that obeys the rules of stack data structure. This run-time stack is divided into multiple mini-stacks, more formally, these mini-stacks are called *stack frames*. Each stack frame is dedicated to **one** function which has been called during the execution of the program, once this function exists, its frame will be removed from the larger process stack, hence, it will be removed from the memory. 
+In x86, each process has its own run-time stack [We claim that for the purpose of explanation. But actually the matter of separated run-time stack for each process is a design decision that the operating system's kernel programmer/designer is responsible for.], we can imagine this run-time stack as a big (or even small, that depends on practical factors) memory region that obeys the rules of stack data structure. This run-time stack is divided into multiple mini-stacks, more formally, these mini-stacks are called *stack frames*. Each stack frame is dedicated to **one** function which has been called during the execution of the program, once this function exists, its frame will be removed from the larger process stack, hence, it will be removed from the memory. 
 
 The x86 register `EBP` (which is called the *stack frame base pointer*) contains the starting memory address of the current stack frame, and the register `ESP` (which is called the *stack pointer*) contains the memory address of the top of the stack. To push a new item into the run-time stack, an x86 instruction named `push` can be used with the value of the new item as an operand, this instruction decrements the value of `ESP` to get a new *starting* memory location to put the new value on and to keep `ESP` pointing to the top of the stack, decrementing the value of `ESP` means that the newly pushed items are stored in a lower memory location than the previous value and that means the run-time stack in x86 *grows downward* in the memory.
 
 When we need to read the value on the top of the stack and removes this value from the stack, the x86 instruction `pop` can be used which is going to store the value (which resides on the top of stack) on the specified location on its operand, this location can be a register or a memory address, after that, `pop` operation increments the value of `ESP`, so the top of stack now refers to the previous value. Note that the `pop` instruction only increments `ESP` to get rid of the popped value and don't clear it from memory by, for example, writing zeros on its place which is better for the performance, and this is one of the reasons when you refer to some random memory location, for example in C pointers, and you see some weird value that you probably don't remember that you have stored it in the memory, once upon a time, this value may have been pushed into the run-time stack and its frame has been removed. This same practice is also used in modern filesystems for the sake of performance, when you delete a file the filesystem actually doesn't write zeros in the place of the original content of the file, instead, it just refer to its location as a free space in the disk, and maybe some day this location is used to store another file (or part of it), and this is when the content of the deleted file are actually cleared from the disk.
 
-Let's get back to x86 run-time stack. To make the matter clear in how `push` and `pop` work, let's take an example. Assume that the current memory address of the top of stack (`ESP`) is `102d` and we executed the instruction `push A` where `A` is a character encoded in `UTF-16` which means its size is `2` bytes (`16` bits) and it is represented in hexadecimal as `0x0410`, by executing this `push` instruction the processor is going to subtract `2` from `ESP` (because we need to push `2` bytes into the stack) which gives us the new memory location `100d`, then the processor stores the first byte of `UTF-16` `A` (`0x04`) in the location `100d` and the second byte (`0x10`) in the location `101d` ^[In fact, x86 is little-endian architecture which means that `0x10` will be stored in the location `100d` while `0x04` will be stored in the location `101d` but I've kept the example in the main text as is for the sake of simplicity.], the value of `ESP` will be changed to `100d` which now represents the top of the stack.
+Let's get back to x86 run-time stack. To make the matter clear in how `push` and `pop` work, let's take an example. Assume that the current memory address of the top of stack (`ESP`) is `102d` and we executed the instruction `push A` where `A` is a character encoded in `UTF-16` which means its size is `2` bytes (`16` bits) and it is represented in hexadecimal as `0x0410`, by executing this `push` instruction the processor is going to subtract `2` from `ESP` (because we need to push `2` bytes into the stack) which gives us the new memory location `100d`, then the processor stores the first byte of `UTF-16` `A` (`0x04`) in the location `100d` and the second byte (`0x10`) in the location `101d` [In fact, x86 is little-endian architecture which means that `0x10` will be stored in the location `100d` while `0x04` will be stored in the location `101d` but I've kept the example in the main text as is for the sake of simplicity.], the value of `ESP` will be changed to `100d` which now represents the top of the stack.
 
 When we need to `pop` the character `A` from the top of the stack, both bytes should be read and `ESP` should be **incremented** by `2`. In this case, the new memory location `100d` can be considered as a *starting* location of the data because it doesn't store the whole value of `A` but a part of it, the case where the new memory location is not considered as starting memory location is when the newly pushed values is pushed as whole in the new memory location, that is, when the size of this value is `1` byte.
 
@@ -484,7 +586,7 @@ mov ecx, eax
 ; Rest of A's Code
 ```
 
-![Run-time Stack Before Jumping to Function `B` Code](Figures/x86-ch/call-conv-1.png){#fig:call-conv-1 width=55%}
+![Run-time Stack Before Jumping to Function `B` Code](/assets/call-conv-1.png){#fig:call-conv-1 width=55%}
 
 When the processor starts executing function `B`, or any other function, it's the job of the function to create its own stack frame, therefore, the first piece of any function's code should be responsible for creating a new stack frame, this happens by moving the value of `ESP` (the memory address of the top of stack) to the register `EBP`, but before that, we should not lose the previous value of `EBP` (the starting memory address of the caller's stack frame), this value will be needed when the callee `B` finishes, so, the function `B` should push the value of `EBP` onto the stack and only after that it can change `EBP` to the value of `ESP` which creates a new stack frame for function `B`, at this stage, both `EBP` and `ESP` points to the top of the stack and the value which is stored in the top of the stack is memory address of the previous `EBP`, that is, the starting memory location of `A`'s stack frame. Figure @fig:call-conv-2 shows the run-time stack at this stage. The following code shows the initial instructions that a function should perform in order to create a new stack frame as we just described.
 
@@ -497,7 +599,7 @@ mov ebp, esp
 ```
 
 
-![Run-time Stack After Jumping to Function `B` Code and Creating `B`'s Stack Frame](Figures/x86-ch/call-conv-2.png){#fig:call-conv-2 width=55%}
+![Run-time Stack After Jumping to Function `B` Code and Creating `B`'s Stack Frame](/assets/call-conv-2.png){#fig:call-conv-2 width=55%}
 
 Now, the currently running code is function `B` with its own stack frame which contains nothing. Depending on `B`'s code, new items can be pushed onto the stack, and as we have said before, the local variables of the function are pushed onto the stack by the function itself, as you know, x86's protected mode is a `32-bit` environment, so, the values that are pushed onto the stack through the instruction `push` are of size `4` bytes (`32` bits).
 
@@ -570,32 +672,32 @@ The details of calling a function that we have just described are **implementati
 ### Growth Direction of Run-time Stack
 When we explained how x86 instructions `push` and `pop` work, we have claimed that the x86 run-time stack *grows downward*, so, what does growing downward or upward exactly means? Simply, when we said that x86 run-time stack grows downward we meant the the older items of stack are pushed on larger memory addresses while the most recent ones are pushed onto smaller memory addresses. For example, starting from the memory address `104d`, let's assume we have pushed the value `A` after that we pushed the value `B`, then `A`'s memory location will be `104d` while `B`'s memory location will be `100d`, so the new values will always be pushed on the bottom of the old ones in the memory. 
 
-![An Example of a Run-Time Stack with Three Items](Figures/x86-ch/Fig10062021_0.png){#fig:10062021_0 width=35%}
+![An Example of a Run-Time Stack with Three Items](/assets/Fig10062021_0.png){#fig:10062021_0 width=35%}
 
 What makes we claim that, for instance, the address `100d` is at the bottom of `104d` instead of the other way around is how we visualize the run-time stack inside the main memory. Let's look at the figure @fig:10062021_0 which shows a run-time stack that contains three items `M`, `R` and `A` and all of them are of `4` bytes, on the right side of the figure we can see the starting memory address of each item. As we can see, in this visualization of the run-time stack, the smaller memory addresses are on the bottom and the larger memory addresses are on the top.
 
-From the figure we can see that the value of `ESP` is `8d` ^[As a reminder, don't forget that all these memory address are actually **offsets** inside a stack segment and not a whole memory address.], let's assume that we would like to run the instruction `push C` on this run-time stack, as we have mentioned before, the instruction `push` of x86 is going to decrease the value of `ESP` by a size decided by the architecture (`4` bytes in our case) in order to get a new starting memory address for the new item. So, `push` is going to subtract `4d`  (The size of pushed item `C` in bytes) from `8d` (current `ESP` value) which gives us the new starting memory location `4d` for the item `C`. If we visualize the run-time stack after pushing `C` it will be the one as on figure @fig:10062021_1 and we can see, depending on the way of `push` instruction works, that the stack grew downwards by pushing the new item `C` on the bottom. So, according to this visualization of run-time stack, which puts larger memory addresses on the top and smaller on the bottom, we can say x86 run-time stack grows downward *by default*. 
+From the figure we can see that the value of `ESP` is `8d` [As a reminder, don't forget that all these memory address are actually **offsets** inside a stack segment and not a whole memory address.], let's assume that we would like to run the instruction `push C` on this run-time stack, as we have mentioned before, the instruction `push` of x86 is going to decrease the value of `ESP` by a size decided by the architecture (`4` bytes in our case) in order to get a new starting memory address for the new item. So, `push` is going to subtract `4d`  (The size of pushed item `C` in bytes) from `8d` (current `ESP` value) which gives us the new starting memory location `4d` for the item `C`. If we visualize the run-time stack after pushing `C` it will be the one as on figure @fig:10062021_1 and we can see, depending on the way of `push` instruction works, that the stack grew downwards by pushing the new item `C` on the bottom. So, according to this visualization of run-time stack, which puts larger memory addresses on the top and smaller on the bottom, we can say x86 run-time stack grows downward *by default*. 
 
-![A New Item Pushed Into a Stack that Grows Downward](Figures/x86-ch/Fig10062021_1.png){#fig:10062021_1 width=35%}
+![A New Item Pushed Into a Stack that Grows Downward](/assets/Fig10062021_1.png){#fig:10062021_1 width=35%}
 
 This visualization is just one way to view how the run-time stack grows, which means they may be other visualizations, and the most obvious one is to reverse the one that we just described by putting the smaller addresses on the top and the larger addresses on the bottom as shown in figure @fig:10062021_2, you can note that in contrast to figure @fig:10062021_1 the smallest address `4d` is on top, so, based on this visualization the stack grows upward! Actually this latter visualization of run-time stack is the one which is used in Intel's manual and the term *expand-up* is the term that is used in the manual to describe the direction of stack growth.
 
-![A Stack that Grows Upward Instead of Downward](Figures/x86-ch/Fig10062021_2.png){#fig:10062021_2 width=35%}
+![A Stack that Grows Upward Instead of Downward](/assets/Fig10062021_2.png){#fig:10062021_2 width=35%}
 
-To sum it up, the direction in which the run-time stack grows (down or up) depends on how do you visualize the run-time stack, as in figure @fig:10062021_1 or as in figure @fig:10062021_2. In our discussion in this book we are going to depend on the first visualization^[And many other books actually uses the first visualization as I recall and for that I chose it in this book. And according to my best knowledge the only reference that I've seen that depends on the second visualization is Intel's manual.], so, simply, the run-time stack of x86 grows downward.
+To sum it up, the direction in which the run-time stack grows (down or up) depends on how do you visualize the run-time stack, as in figure @fig:10062021_1 or as in figure @fig:10062021_2. In our discussion in this book we are going to depend on the first visualization[And many other books actually uses the first visualization as I recall and for that I chose it in this book. And according to my best knowledge the only reference that I've seen that depends on the second visualization is Intel's manual.], so, simply, the run-time stack of x86 grows downward.
 
 ### The Problem of Resizing the Run-time Stack
 We have emphasized that x86 run-time stack **by default** grows downward, this default behavior can be changed if we wish to, which is going to make the run-time stack to grow upwards instead and the way to do that is to use expansion-direction flag of run-time stack's segment descriptor,  we have mentioned this flag when explained the structure of segment descriptor and postponed its details till here. 
 
 When we want the run-time stack to grow downward (or in Intel's term which depends on the second visualization of run-time stack: **expand-up**) the value of this flag should be `0`, on the other hand, when we want the run-time stack to grow upward (in Intel's term: **expand-down**) the value of this flag should be `1`. Modern operating systems use the default behavior (downward growth), we will see that this design decision is taken due to the choice of flat memory model by modern operating systems. However, the other available option (upward growth) is there to solve a potential problem and whether this problem is going to show up in a specific kernel depends on how this kernel's architecture is designed, that is, which memory model is used in this kernel. 
 
-This problem, which we can solve by making the run-time stack grows upward instead of downward, is related to the need of increasing the size of run-time stack and the fact that the run-time stack stores memory addresses ^[The previous values of `EBP` and `EIP`. Also the application programmer may store memory addresses of local variables in the stack (e.g. by using pointers in C).] on it. Let's assume that our kernel created a new stack segment for a specific process `X` and this stack segment has a fixed size which is `50` bytes ^[As you may recall, the size of the segment can be decided by the base address of the segment and its limit as specified in the segment's descriptor.] for example. The process `X` starts its work and at some point of time its run-time stack of size `50` bytes becomes full which means that we need to resize it and make it bigger so it can hold more items, let's assume the new size will be `60` bytes. 
+This problem, which we can solve by making the run-time stack grows upward instead of downward, is related to the need of increasing the size of run-time stack and the fact that the run-time stack stores memory addresses [The previous values of `EBP` and `EIP`. Also the application programmer may store memory addresses of local variables in the stack (e.g. by using pointers in C).] on it. Let's assume that our kernel created a new stack segment for a specific process `X` and this stack segment has a fixed size which is `50` bytes [As you may recall, the size of the segment can be decided by the base address of the segment and its limit as specified in the segment's descriptor.] for example. The process `X` starts its work and at some point of time its run-time stack of size `50` bytes becomes full which means that we need to resize it and make it bigger so it can hold more items, let's assume the new size will be `60` bytes. 
 
-![Process X's Run-time Stack](Figures/x86-ch/Fig10062021_3.png){#fig:10062021_3 width=35%}
+![Process X's Run-time Stack](/assets/Fig10062021_3.png){#fig:10062021_3 width=35%}
 
 Before going any further with our discussion, let's see the figure @fig:10062021_3 which represents a snapshot of process `X`'s run-time stack when it became full. We can see from the figure that `X`'s stack  segment starts from the **physical** memory address `300d` (segment's base address) and ends at the **physical** memory address `250d`, also, the items of run-time stack are referred to based on their offsets inside the stack segment. We can see that a bunch of values have been pushed onto the stack, some of those values are shown on the figure and some other are omitted and replaced by dots which means that there are more values here in those locations. Normal values are called "some value" in the figure and the last pushed value in the stack is the value `Z`. Also, a value which represents a **logical memory address** has been pushed onto the stack, more accurately, this value represents an **offset** within the current stack segment, a **full** logical memory address actually consists of both offset **and** segment selector as we have explained earlier in this chapter when we discussed address translation. But for the sake of simplicity, we are going call this stored value as "memory address" or "memory location" in our current explanation. As we explained earlier, all memory addresses that the processes work with are logical and not physical. The value `26d` is a local variable `P` of the type pointer (as in C) which points to another local variable `R` that has the value `W` and is stored in the memory location `26d`. 
 
-![Process X's Run-time Stack After Resize (Grows Downward)](Figures/x86-ch/Fig10062021_4.png){#fig:10062021_4 width=35%}
+![Process X's Run-time Stack After Resize (Grows Downward)](/assets/Fig10062021_4.png){#fig:10062021_4 width=35%}
 
 Figure @fig:10062021_4 shows `X`'s stack after resize, as you can see we have got our new free space of `10` bytes, also, because the stack grows downward so the new free space should be added on the bottom of the stack to be useful which means the previous offsets should be changed, therefore, the largest offset `50d` has been updated to `60d` by adding `10d` (which is the newly added free space to the stack in bytes) to it and so on for the rest of offsets, also, `ESP` has been simply updated in the same manner.
 
@@ -603,13 +705,13 @@ Now we can see that the process of updating the offsets, that we are forced to p
 
 A potential solution for this problem is to update all stack items that contain memory addresses in the range of the stack after resizing it, exactly as we have done with `EBP`, but more simpler solution is to make the stack to grow upwards instead of downwards! Modern operating systems solves this problem by not dividing the memory into segments but they use flat memory model which views the memory as one big segment for all data, code and stacks.
 
-![Process X's Run-time Stack (Grows Upward)](Figures/x86-ch/Fig12062021_1.png){#fig:12062021_1 width=35%}
+![Process X's Run-time Stack (Grows Upward)](/assets/Fig12062021_1.png){#fig:12062021_1 width=35%}
 
 Now let's see what happens in the same scenario but with changing the growth direction of the stack from downward which caused the problem to upwards. In this case, as we have said before, the new items will be stored on the larger memory addresses (offsets to be more accurate). Figure @fig:12062021_1 shows the same snapshot of `X`'s run-time of stack as in the one of figure @fig:10062021_3 but this time it grows upwards instead of downward. You can notice that the older values are now on the bottom of the stack, that is, on smaller memory addresses, what interests us in this stack is the entry which stores the memory address `20d` that points to the memory location which has the value `W` and it is the one which caused the problem in the first place. When the stack was growing downward, the memory location of the value `W` was `26d`, but this time it is `20d`. So, what happens when we need to resize this run-time stack?
 
-In the same way of the previous one, the limit of the stack (its largest offset) will be increased from `50d` to `60d` as shown in figure @fig:12062021_2, but in contrast to the previous one, we don't need to update the value of `ESP` anymore,  because as you can see from the two figures @fig:12062021_1 and @fig:12062021_2 the memory address `50d` represents the top of the stack on both stacks. The same holds true for the stack item which stores the memory address `20d`, we don't need to update it because the value `W` is still on the same memory address (offset) and can be pointed to by the memory address `20d`. So, we can say that deciding the direction of run-time stack growth to be upward instead of downward can easily solve the problem of getting wrong stored memory address after resizing the run-time stack ^[Actually, the well-know stack overflow vulnerability in x86 is also caused by stack growing downward and can be avoided easily in growing upwards stacks!] and that's when we use segmentation as a way of viewing the memory.
+In the same way of the previous one, the limit of the stack (its largest offset) will be increased from `50d` to `60d` as shown in figure @fig:12062021_2, but in contrast to the previous one, we don't need to update the value of `ESP` anymore,  because as you can see from the two figures @fig:12062021_1 and @fig:12062021_2 the memory address `50d` represents the top of the stack on both stacks. The same holds true for the stack item which stores the memory address `20d`, we don't need to update it because the value `W` is still on the same memory address (offset) and can be pointed to by the memory address `20d`. So, we can say that deciding the direction of run-time stack growth to be upward instead of downward can easily solve the problem of getting wrong stored memory address after resizing the run-time stack [Actually, the well-know stack overflow vulnerability in x86 is also caused by stack growing downward and can be avoided easily in growing upwards stacks!] and that's when we use segmentation as a way of viewing the memory.
 
-![Process X's Run-time Stack (Grows Upward) Resized](Figures/x86-ch/Fig12062021_2.png){#fig:12062021_2 width=35%}
+![Process X's Run-time Stack (Grows Upward) Resized](/assets/Fig12062021_2.png){#fig:12062021_2 width=35%}
 
 ## x86 Interrupts
 Event-driven programming is a common programming paradigm that is used in many areas of programming. One of these areas is graphical user interface (GUI) programming, also, it is common in game development, furthermore, some network programming frameworks use this paradigm. In this paradigm, the program is driven by *events*, that is, it keeps idle and waiting for any even to occur and once an event occurs the program starts to work by handling this event, for example, a mouse click is considered as an event in GUI programming. When an event occurs, the program handles this event through, usually, a separated function which is dedicated for this event, this function is known as a *handler*. In GUI programming for example, when the user clicks on a specific button, that is, when this event occurs, a function specified for this event on this button (the handler) is called to perform some operation after this click, such as, save a document or close the application.
@@ -618,7 +720,7 @@ This paradigm is also used by x86. When a process is running, something can *int
 
 One example of the usage of interrupts in this low-level environment is the *system timer*. In the hardware level, there could be a system timer which interrupts the processor in each `X` period of time and this type of interrupt is the one that makes multitasking possible in uniprocessor systems. When a processor is interrupted by the system timer, it can call the kernel which can change the currently running process to another one; this operation known as *scheduling* which its goal is distributing the time of the processor to the multiple processes in the system.
 
-Another example of using interrupts is when the user of an operating system presses some keys on the keyboard, these events of pressing keyboard keys should be sent to the kernel which is going to delegate the *device driver* ^[That's why in some kernel's designs, especially, monolithic kernel keeps the device drivers as a part of the kernel.] of the keyboard to handle these events in a proper way, in this case, with each key press, the keyboard is going to interrupt the processor and request to handle these events.
+Another example of using interrupts is when the user of an operating system presses some keys on the keyboard, these events of pressing keyboard keys should be sent to the kernel which is going to delegate the *device driver* [That's why in some kernel's designs, especially, monolithic kernel keeps the device drivers as a part of the kernel.] of the keyboard to handle these events in a proper way, in this case, with each key press, the keyboard is going to interrupt the processor and request to handle these events.
 
 In x86, both hardware and software can interrupt the processor, system timer and keyboard are examples of *hardware interrupts* while the *software interrupt* can occur by using the x86 instruction `int` which we have used when we wrote our bootloader, the operand of this instruction is the *interrupt number*, for example, in our bootloader we have used the following line `int 10h`, in this case, the interrupt number is `10h` (`16d`) and when the processor is interrupted by this instruction, it is going to call the handler of interrupt number `10h`. Software interrupt can be used to implement what is known as *system calls* which provide a way for user applications to call a specific kernel's code that gives the applications some important services such as manipulating the filesystem (e.g. reading or writing files, create new file or directories, etc.) or creating new process and so on in a way that resembles the one that we used to call BIOS services. 
 
@@ -627,7 +729,7 @@ In addition to interrupts, *exceptions* can be considered as another type of eve
 ### Interrupt Descriptor Table
 In x86, there is a table known as *interrupt descriptor table* (`IDT`), also may called *interrupt vector table* but the term that Intel uses is the former one while the latter are used to describe this kind of tables as a concept in some works of literature and not the name of the table on a specific architecture. `IDT` resides in the memory and tells the processor how to reach to the handler of a given interrupt number. The entries of `IDT` are known as *gate descriptors* and the size of each one of them is `8` bytes same as `GDT` and `LDT`. At most, `IDT` can contain `256` gate descriptors and the base memory address of `IDT` is stored in a special register known as `IDTR`.
 
-![Gate Descriptor Structure for Interrupt and Trap Gates](Figures/x86-ch/Fig210621_0.png){#fig:210621_0 width=50%}
+![Gate Descriptor Structure for Interrupt and Trap Gates](/assets/Fig210621_0.png){#fig:210621_0 width=50%}
 
 The gate descriptors in the `IDT` table can be of three types, *task gate*, *interrupt gate* and *trap gate*, our focus currently will be on the latter two. The structure of both interrupt and trap gate descriptor is shown in figure @fig:210621_0. As we have said earlier, a gate descriptor of the `IDT` should point to the memory address of the interrupt handler's code. We can see in the figure that bytes `2` and `3` should contain a segment selector, which is the segment selector of handler's code, that is, the index of the code segment that contains handler's code, we can see an important difference between `GDT` and `IDT` here. In the former the base address of a segment is a linear address, while the base address of the handler is a logical address. 
 
@@ -646,4 +748,4 @@ In protected-mode, interrupt numbers, that is `IDT` entries indices, from `0` to
 #### The Register `IDTR`
 In same way as `GDT`, we should tell the processor where the `IDT` reside in the memory and that can be performed by the instruction `lidt` which stands for *l*oad `IDT`, this instructions works as `lgdt`, it takes an operand and loads it to the register `IDTR` which will be used later by the processor to reach to the `IDT` table. 
 
-The structure of `IDTR` is same as `GDTR`, its size is `48` bits and it's divided into two parts, the first part represents the size of the `IDT` in bytes, that is, the `IDT`'s limit, this field starts from bit `0` of `IDTR` and ends at bit `15`. Starting from bit `16` up to bit `47` the base linear address ^[As we have mentioned multiple time that in our current case, where the paging is disabled, a linear address is same as physical address.] where `IDT` is reside should be set.
+The structure of `IDTR` is same as `GDTR`, its size is `48` bits and it's divided into two parts, the first part represents the size of the `IDT` in bytes, that is, the `IDT`'s limit, this field starts from bit `0` of `IDTR` and ends at bit `15`. Starting from bit `16` up to bit `47` the base linear address [As we have mentioned multiple time that in our current case, where the paging is disabled, a linear address is same as physical address.] where `IDT` is reside should be set.
