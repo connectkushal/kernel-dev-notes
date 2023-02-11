@@ -495,36 +495,70 @@ Table: An Example of How Zero to Fifteen are Represented in the Three Numbering 
 #### The Special Register `GDTR`
 - The special register `GDTR` stores the base physical address [More accurately, the linear address] of the global descriptor table, or the starting point of `GDT` table. 
   - the same register also stores the limit (or size) of the table. 
+    ![GDTR Structure](/assets/Fig16062021_0.png)
 
-  ![GDTR Structure](/assets/Fig16062021_0.png)
-
-- To load a value into the register `GDTR` the x86 instruction `lgdt`, which stands for *load* global descriptor table, should be used. This instruction takes one operand which is the whole value that should be loaded into `GDTR`, the structure of this value should be similar to the structure of `GDTR` itself which is shown in figure @fig:16062021_0. The figure shows that the total size of `GDTR` is `48` bits divided into two parts. The first part starts from bit `0` (the least significant bit) to bit `15`, this part contains the limit of `GDT` table that we would like to load. The size of this part of `GDTR` register is `16` bits which can represent the value `65,536` at maximum, that means the maximum size of `GDT` table can be `64KB = 65,536 Bytes / 1024`, and as we know, the size of each of descriptor is `8` bytes, that means the `GDT` table can hold `8,192` descriptors at most. The second part of `GDTR` starts from bit `16` to bit `47` (the most significant bit) and stores the base memory address of `GDT` table that we would like to load.
+- To load a value into the register `GDTR` the x86 instruction `lgdt`, which stands for *load* global descriptor table, should be used.
+  - This instruction takes one operand which is the whole value that should be loaded into `GDTR`, the structure of this value should be similar to the structure of `GDTR` itself which is shown in figure above.
+- The figure shows that the total size of `GDTR` is `48` bits divided into two parts.
+  - The first part starts from bit `0` (the least significant bit) to bit `15`,
+  - this part contains the limit of `GDT` table that we would like to load.
+  - The size of this part of `GDTR` register is `16` bits which can represent the value `65,536` at maximum which is `64KB`,
+  - since the size of each of descriptor is `8` bytes, that means the `GDT` table can hold `8,192` descriptors at most.
+  - The second part of `GDTR` starts from bit `16` to bit `47` (the most significant bit) and stores the base memory address of `GDT` table that we would like to load.
 
 #### Local Descriptor Table
-The global descriptor table is a system-wide table, in other words, it is available for every process of the system. In addition to `GDT`, x86 provides us with ability to define *local descriptor tables* (`LDT`) in protected-mode which have the same functionality and structure of `GDT`. 
+- The global descriptor table is a system-wide table, in other words, it is available for every process of the system.
+- In addition to `GDT`, x86 provides us with ability to define *local descriptor tables* (`LDT`) in protected-mode which have the same functionality and structure of `GDT`.
+- Contrary to `GDT` table, multiple `LDT` can be defined in the system, and each one of them can be private to a specific process that is currently running on the system,
+- also multiple running processes can share a single `LDT` that is considered private for them by the kernel and no other processes can reach this given `LDT`.
+- How to use `LDT` depends on how the kernel is designed, and while `GDT` is required in x86 architecture by default, `LDT` is optional and the designer of the kernel is the one who is responsible to decide whether to use `LDT` or not.
+- Let's assume that we need to create a new `LDT` table for process `A` which is currently running on the system,
+  - this `LDT` table is already filled with the descriptors that describe the segments which belong to process `A`.
+  - The structure of the descriptors in `LDT` is exactly same as the one that we already described in this chapter.
+  - To tell the processor that a given region of a memory is an `LDT` table, a new segment descriptor should be created in `GDT`. 
 
-In contrary to `GDT` table, multiple `LDT` can be defined in the system, and each one of them can be private to a specific process that is currently running on the system, also, multiple running processes can share a single `LDT` that is considered private for them by the kernel and no other processes can reach this given `LDT`. Anyway, how to use `LDT` depends on how the kernel is designed, and while `GDT` is required in x86 architecture by default, `LDT` on the other hand is optional and the designer of the kernel is the one who is responsible to decide whether to use `LDT` or not.
+- In our previous discussion of `S` flag we mentioned that this flag tells the processor whether a defined segment is an application segment (S flag = `1`) or a system segment (S flag = `0`), the segment of the memory that contains an `LDT` table is considered as a system segment,
+  - that is, the value of `S` flag in the descriptor that describes an `LDT` table should be `0`
+  - and because there are other types of system segments, the type field of the descriptor should have value `0010b` (`2d`) to describe this descriptor as an `LDT` table,
+  - how the processor can tell which table should currently used for a given segment `GDT` or `LDT` will be discussed in the next subsection.
 
-Let's assume that we need to create a new `LDT` table for process `A` which is currently running on the system, this `LDT` table is already filled with the descriptors that describe the segments which belong to process `A`. The structure of the descriptors in `LDT` is exactly same as the one that we already described in this chapter. To tell the processor that a given region of a memory is an `LDT` table, a new segment descriptor should be created in `GDT`. 
-
-In our previous discussion of `S` flag we mentioned that this flag tells the processor whether a defined segment is an application segment (S flag = `1`) or a system segment (S flag = `0`), the segment of the memory that contains an `LDT` table is considered as a system segment, that is, the value of `S` flag in the descriptor that describes an `LDT` table should be `0` and because there are other types of system segments than `LDT` then we should tell the processor this system segment is an `LDT` table, to do that we should use the type field of the descriptor that we already mentioned, the value of this field should be `0010b` (`2d`) for descriptors that describe an `LDT` table, how the processor can tell which table should currently used for a given segment `GDT` or `LDT` will be discussed in the next subsection.
-
-The x86 instruction `lldt` is used to load the `LDT` table that we would like to use now into a special register named `LDTR` which is a `16-bit` register that should contain the segment selector [More accurate definition of a segment selector and its structure in protected-mode is presented in the next subsection.] in `GDT` of the `LDT` table that we would like to use, in other words, the index of segment descriptor which describe the `LDT` table and which reside in `GDT` as an entry should be loaded into `LDTR` register.
+- The x86 instruction `lldt` is used to load the `LDT` table that we would like to use now into a special register named `LDTR`
+  - it is a `16-bit` register that should contain the segment selector in `GDT` of the `LDT` table that we would like to use,
+  - in other words, the index of segment descriptor which describe the `LDT` table and which reside in `GDT` as an entry should be loaded into `LDTR` register.
+  - [More accurate definition of a segment selector and its structure in protected-mode is presented in the next subsection.]
 
 #### Segment Selector
-As we know, the index (offset) of the descriptor that the currently running code needs to use, whether this descriptor defines and code or data segment, should be loaded into one of segment registers, but how the can the processor tell if this index which is loaded into a segment register is an index in the `GDT` or `LDT`? 
+- As we know, the index (offset) of the descriptor that the currently running code needs to use, whether this descriptor defines and code or data segment, should be loaded into one of segment registers, but how the can the processor tell if this index which is loaded into a segment register is an index in the `GDT` or `LDT`? 
 
-![Segment Selector Structure](/assets/Fig17062021_0.png){#fig:17062021_0 width=50%}
+    ![Segment Selector Structure](/assets/Fig17062021_0.png)
 
-When we discussed segment selectors previously in this chapter we have said that our definition of this concept is a **relaxed** definition, that is, a simplified one that omits some details. In reality, the index of a segment descriptor is just one part of a segment selector, figure @fig:17062021_0 shows the structure of a segment selector, which is same as the structure of all segment registers `CS`, `SS`, `DS`, `ES`, `FS` and `GS`. We can see from the figure that the size of a segment selector is `16` bits and starting from the least significant bit (bit `0`), the first two bits `0` and `1` are occupied by field known as *requester privilege level* (`RPL`). Bit `2` is occupied by a flag named *table indicator* (`TI`), and finally, the index of a segment descriptor occupies the field from bit `3` until bit `15` of the segment selector. The index field (descriptor offset) is already well-explained in this chapter, so we don't need to repeat its details. 
+- When we discussed segment selectors previously in this chapter we have said that our definition of this concept is a **relaxed** definition, that is, a simplified one that omits some details. In reality, the index of a segment descriptor is just one part of a segment selector, figure above shows the structure of a segment selector, which is same as the structure of all segment registers `CS`, `SS`, `DS`, `ES`, `FS` and `GS`.
+  - We can see from the figure that the size of a segment selector is `16` bits and starting from the least significant bit (bit `0`), the first two bits `0` and `1` are occupied by field known as *requester privilege level* (`RPL`).
+  - Bit `2` is occupied by a flag named *table indicator* (`TI`), and finally,
+  - the index of a segment descriptor occupies the field from bit `3` until bit `15` of the segment selector.
+  - The index field (descriptor offset) is already well-explained in this chapter, so we don't need to repeat its details.
+  - The table indicator flag (`TI`) is the one which is used by the processor to tell if the index in the segment selector 
+    - is an index in `GDT`,when the value of `TI` is `0`,
+    - or `LDT`, when the value is `1`.
+    - When the case is the latter, the processor consults the register `LDTR` to know the index of the descriptor that defines the current `LDT` in the `GDT` and by using this index, the descriptor of `LDT` is read from `GDT` by the processor to fetch the base memory address of the current `LDT`,
+    - after that, the index in the segment selector register can be used to get the required segment descriptor from the current `LDT` by using the latter base memory address that just been fetched,
+    - of course these values are cached by the processor for quick future access.
 
-The table indicator flag (`TI`) is the one which is used by the processor to tell if the index in the segment selector is an index in `GDT`, when the value of `TI` is `0`, or `LDT`, when the value is `1`. When the case is the latter, the processor consults the register `LDTR` to know the index of the descriptor that defines the current `LDT` in the `GDT` and by using this index, the descriptor of `LDT` is read from `GDT` by the processor to fetch the base memory address of the current `LDT`, after that, the index in the segment selector register can be used to get the required segment descriptor from the current `LDT` by using the latter base memory address that just been fetched, of course these values are cached by the processor for quick future access.
-
-In our previous discussions of privilege levels we have discussed two values, current privilege level (`CPL`) which is the privilege level of the currently executing code and descriptor privilege level (`DPL`) which is the privilege level of a given segment, the third value which contributes to the privilege level checks in x86 is *requester privilege level* (`RPL`) which is stored in the segment selector, necessarily, `RPL` has four possible values `0`, `1`, `2` and `3`. 
-
-To understand the role of `RPL` let's assume that a process `X` is running in a user-mode, that is, in privilege level `3`, this process is a malicious process that aims to gain an access to some important kernel's data structure, at some point of time the process `X` calls a code in the kernel and passes the segment selector of the more-privileged data segment to it as a parameter, the kernel code runs in the most privileged level and can access all privileged data segment by simply loading the required data segment selector to the corresponding segment register, in this case the `RPL` is set to `0` maliciously by process `X`, since the kernel runs on the privilege level `0` and `RPL` is `0`, the required segment selector by process `X` will be loaded and the malicious process `X` will be able to gain access to the data segment that has the sensitive data. 
-
-To solve this problem, `RPL` should be set to the **requester** privilege level by the kernel to load the required data segment, in our example, the requester (the caller) is the process `X` and its privilege level is `3` and the current privilege level is `0` since the kernel is running, but because the caller has a less-privileged level the kernel should set the `RPL` of the required data segment selector to `3` instead of `0`, this tells the processor that while the currently running code in a privilege level `0` the code that called it was running in privilege level `3`, so, any attempt to reach a segment which its selectors `RPL` is larger than `CPL` should be denied, in other words, the kernel should not reach privileged segments in behalf of process `X`. The x86 instruction `arpl` can be used by the kernel's code to change the `RPL` of the segment selector that has been requested by less-privileged code to access to the privilege level of the caller, as in the example of process `X`.
+- In our previous discussions of privilege levels we have discussed two values,
+  - current privilege level (`CPL`) which is the privilege level of the currently executing code and
+  - descriptor privilege level (`DPL`) which is the privilege level of a given segment,
+- the third value which contributes to the privilege level checks in x86 is **requester privilege level** (`RPL`) which is stored in the segment selector,
+  - necessarily, `RPL` has four possible values `0`, `1`, `2` and `3`. 
+ - To understand the role of `RPL` let's assume that a process `X` is running in a user-mode which is in privilege level `3`,
+   - this process is a malicious process that aims to gain an access to some important kernel's data structure,
+   - at some point of time the process `X` calls a code in the kernel and passes the segment selector of the more-privileged data segment to it as a parameter,
+   - the kernel code runs in the most privileged level and can access all privileged data segment by simply loading the required data segment selector to the corresponding segment register,
+   - in this case the `RPL` is set to `0` maliciously by process `X`, since the kernel runs on the privilege level `0` and `RPL` is `0`, the required segment selector by process `X` will be loaded and the malicious process `X` will be able to gain access to the data segment that has the sensitive data.
+- To solve this problem, `RPL` should be set to the **requester** privilege level by the kernel to load the required data segment,
+  - in our example, the requester (the caller) is the process `X` and its privilege level is `3` and the current privilege level is `0` since the kernel is running,
+  - but because the caller has a less-privileged level the kernel should set the `RPL` of the required data segment selector to `3` instead of `0`, this tells the processor that while the currently running code in a privilege level `0` the code that called it was running in privilege level `3`, so, any attempt to reach a segment which its selectors `RPL` is larger than `CPL` should be denied,
+  - in other words, the kernel should not reach privileged segments in behalf of process `X`.
+  - The x86 instruction `arpl` can be used by the kernel's code to change the `RPL` of the segment selector that has been requested by less-privileged code to access to the privilege level of the caller, as in the example of process `X`.
 
 
 ## x86 Run-time Stack
