@@ -577,220 +577,419 @@ Table: An Example of How Zero to Fifteen are Represented in the Three Numbering 
     - while in our current context these two terms are used to represent **memory regions** of a running process although the stack (as memory region) uses stack data structure to store the data.
     - Due to that, here we use the more accurate term *run-time stack* to refer the memory region and *stack* to refer the data structure.
 
-- Run-time stack is used to store the values of local variables and function parameters, we can say that the run-time stack is a way to implement *function's invocation* which describes how function `A` can call function `B`, pass to it some parameters, return back to the same point of code where function `A` called function `B` and finally get the returned value from function `B`, the implementation details of these steps is known as *calling convention* and the run-time stack is one way of realizing these steps. There are multiple known calling conventions for x86, different compilers and operating systems may implement different calling conventions, we are not going to cover those different methods but what we need to know that, as we said, those different calling conventions use the run-time stack as a tool to realize function's invocation. The memory region in x86 which is called run-time stack uses a data structure called *stack* to store the data inside it and to manipulate that data. 
+- Run-time stack is used to store the values of local variables and function parameters,
+  - we can say that the run-time stack is a way to implement **function's invocation** which describes how function `A` can call function `B`, pass to it some parameters, return back to the same point of code where function `A` called function `B` and finally get the returned value from function `B`,
+- the implementation details of these steps is known as **calling convention** and the run-time stack is one way of realizing these steps.
+- There are multiple known calling conventions for x86, different compilers and operating systems may implement different calling conventions, those different calling conventions use the run-time stack as a tool to realize function's invocation.
+- The memory region in x86 which is called run-time stack uses a data structure called **stack** to store the data inside it and to manipulate that data. 
 
 ### The Theory: Stack Data Structure
-Typically, a *data structure* as a concept is divided into two components, the first one is the way of storing the data in a high-level terms, a data structure is not concerned about how to store the data in low-level (e.g as bits, or bytes. In the main memory or on the disk, etc.). But it answers the question of storing data as a high-level concept (as we will see in stack example) without specifying the details of implementation and due to that, they are called *abstract data structures*. The second component of a data structure is the available operations to manipulate the stored data. Of course, the reason of the existence of each data structure is to solve some kind of problem. 
+- Typically, a *data structure* as a concept is divided into two components,
+  - the first one is the way of storing the data in a high-level terms,
+    - data structure is not concerned about how to store the data in low-level (e.g as bits, or bytes, or either in the main memory or on the disk, etc.)
+    - But it answers the question of storing data as a high-level concept (as we will see in stack example) without specifying the details of implementation and due to that, they are called **abstract data structures**.
+  - The second component of a data structure is the available operations to manipulate the stored data.
+    - the reason of the existence of each data structure is to solve some kind of problem. 
 
-In stack data structure, the data will be stored in first-in-last-out (FILO) manner [On contrary, *queue data structure* stores data in first-in-**first**-out (FIFO) manner.], that is, the first entry which is stored in the stack can be fetched out of the stack at last. The operations of stack data structure are two: *push* and *pop* [That doesn't mean no more operations can be defined for a given data structure in the implementation level. It only means that the conceptual perspective for a given data structure defines those basic operations which reflect the spirit of that data structure. Remember that when we start to use x86 run-time stack with more operations than `push` and `pop` later, though those other operations are not canonical to the stack data structure, but they can be available if the use case requires that (and yes they may violate the spirit of the given data structure! We will see that later).], the first one puts some value on the *top of the stack*, which means that the top of stack always contains the last value that have been inserted (pushed) into a stack. The latter operation `pop` **removes** the value which resides on the top of the stack and returns it to the user, that means the most recent value that has been `push`ed to the stack will be fetched when we `pop` the stack. 
+- In **stack data structure**, the data will be stored in first-in-last-out (FILO) manner,
+  - the first entry which is stored in the stack can be fetched out of the stack at last.
+- On contrary, **queue data structure** stores data in first-in-**first**-out (FIFO) manner.
+- The operations of stack data structure are *push* and *pop*,
+  - `push` puts some value on the *top of the stack*,
+    -  So, the top of stack always contains the last value that have been inserted (pushed) into a stack.
+  - `pop` **removes** the value which resides on the top of the stack and returns it to the user,
+    -  the most recent value that has been `push`ed to the stack will be fetched when we `pop` the stack.
+  - The conceptual perspective for a given data structure defines these basic operations which reflect the spirit of that data structure, but there can be more ops. We will see that when we start to use x86 run-time stack with more operations than `push` and `pop` later,
+  - though those other operations are not canonical to the stack data structure, but they can be available if the use case requires that and they may violate the spirit of the given data structure.
 
-![A Stack with Two Values `A` and `B` Pushed Respectively.](/assets/abcd-stack-step1.png){#fig:abcd-stack-step1 width=35%}
+- Let's assume that we have the string `ABCD` and we would like to push each character separately into the stack.
+  - First we start with the operation `push A` which puts the value `A` on the top of the stack,
+  - then we execute the operation `push B` which puts the value `B` on top of the value `A`, the same is going to happen if we push the value `C` next and then for the value of `D`.
+  - to read the values from this stack, we use the operation `pop` which, removes the value that resides on the top of the stack and returns it to the user,
+  - ![A Stack with Two Values `A` and `B` Pushed Respectively.](/assets/abcd-stack-step1.png) ![A Stack with Three Values `A`, `B` and `C` Pushed Respectively.](/assets/abcd-stack-step2.png) ![A Stack with Four Values `A`, `B`, `C` and `D` Pushed Respectively.](/assets/abcd-stack-step3.png)
+  
+- The stack data structure is contrary of array data structure, which is implemented by default in most major programming languages and know as arrays (in C for example) or lists (as in Python),
+- Stack doesn't have the property of *random access* to the data. 
+  - That means if you want to read the first pushed value to the stack, then you need to `pop` the stack `n` times, where `n` is the number of pushed elements into the stack or the size of the stack.
+  - In our example stack, to be able to read the first pushed value which is `A` you need to `pop` the stack four times.
+  - This example makes it obvious for us why the stack data structure is described as first-in-last-out data structure.
 
-Let's assume that we have the string `ABCD` and we would like to push each character separately into the stack. First we start with the operation `push A` which puts the value `A` on the top of the stack, then we execute the operation `push B` which puts the value `B` on top of the value `A` as we can see in the figure @fig:abcd-stack-step1, that is, the value `B` is now on the top of the stack and not the value `A`, the same is going to happen if we push the value `C` next as you can see in the figure @fig:abcd-stack-step2 and the same for the value of `D` and you can see the final stack of these four push operations in figure @fig:abcd-stack-step3. 
+- The stack data structure is one of most basic data structures in computer science and there are many well-known applications that can use stack to solve a specific problem in an easy manner.
+  - Eg `push`ing `ABCD` into a stack, character by character and then `pop`ping them back,
+    - the input is `ABCD` but the output of `pop` operation is `DCBA` which is the reverse string of the input,
+    - So, the stack data structure can be used to solve the problem of getting the reversed string of an input by just pushing it into a stack character by character and then popping this stack, concatenating the returned character with the previously returned character, until the stack becomes empty.
+  - Other problems that can be solved easily with stack are palindrome problem
+  - and parenthesis matching problem which is an important one for a part of programming languages' compilers and interpreters known as parser.
 
-![A Stack with Three Values `A`, `B` and `C` Pushed Respectively.](/assets/abcd-stack-step2.png){#fig:abcd-stack-step2 width=35%}
-
-![A Stack with Four Values `A`, `B`, `C` and `D` Pushed Respectively.](/assets/abcd-stack-step3.png){#fig:abcd-stack-step3 width=35%}
-
-Now let's assume that we would like to read the values from this stack, the only way to read data in stack data structure is to use the operation `pop` which, as we have mentioned, removes the value that resides on the top of the stack and returns it to the user, that is, the stack data structure in contrary of array data structure [Which is implemented by default in most major programming languages and know as arrays (in C for example) or lists (as in Python)] doesn't have the property of *random access* to the data, so, if you want to access any data in the stack, you can only use `pop` to do that. That means if you want to read the first pushed value to the stack, then you need to `pop` the stack `n` times, where `n` is the number of pushed elements into the stack, in other words, the size of the stack.
-
-In our example stack, to be able to read the first pushed value which is `A` you need to `pop` the stack four times, the first one removes the value `D` from the top of stack and returns it to the user, which makes the values `C` on the top of stack as you can see in figure @fig:abcd-stack-step2 and if we execute `pop` once again, the value `C` will be removed from the top of the stack and returns it to the user, which makes the value `B` on the top of the stack as you can see in figure @fig:abcd-stack-step1, so we need to `pop` the stack two times more the get the first `push`ed value which is `A`. This example makes it obvious for us why the stack data structure is described as first-in-last-out data structure.
-
-The stack data structure is one of most basic data structures in computer science and there are many well-known applications that can use stack to solve a specific problem in an easy manner. To take an example of applications that can use a stack to solve a specific problem let's get back to our example of `push`ing `ABCD` into a stack, character by character and then `pop`ping them back, the input is `ABCD` but the output of `pop` operation is `DCBA` which is the reverse string of the input, so, the stack data structure can be used to solve the problem of getting the reversed string of an input by just pushing it into a stack character by character and then popping this stack, concatenating the returned character with the previously returned character, until the stack becomes empty. Other problems that can be solved easily with stack are palindrome problem and parenthesis matching problem which is an important one for a part of programming languages' compilers and interpreters known as parser.
-
-As you can see in this brief explanation of stack data structure, we haven't mention any implementation details which means that a specific data structure is an abstract concept that describes a high-level idea where the low-level details are left for the implementer.
+- As you can see in this brief explanation of stack data structure, we haven't mention any implementation details which means that a specific data structure is an abstract concept that describes a high-level idea where the low-level details are left for the implementer.
 
 ### The Implementation: x86 Run-time Stack
-- Now, with our understanding of the theoretical aspect of stack data structure, let's see how the run-time stack is implemented in x86 architecture to be used for the objectives that we have mentioned in the beginning of the subsection. As we have said earlier, the reason of x86 run-time stack's existence is to provide a way to implement function's invocation, that is, the lifecycle of functions. Logically, we know that a program consists of multiple functions (or *routines* which is another term that is used to describe the same thing) and when executing a program (a process), a number of these functions (not necessarily all of them) should be called to fulfill the required job. 
+- Now, with our understanding of the theoretical aspect of stack data structure, let's see how the run-time stack is implemented in x86 architecture.
+- As we have said earlier, the reason of x86 run-time stack's existence is to provide a way to implement function's invocation, which is the lifecycle of functions.
+- Logically, we know that a program consists of multiple functions (or *routines* which is another term that is used to describe the same thing) and when executing a program (a process), a number of these functions (not necessarily all of them) should be called to fulfill the required job. 
+  - In run-time context, a function `B` starts its life when it's called by another function `A`, so, the function `A` is the **caller**, that is, the function that originated the call,
+  - and the function `B` is the **callee**.
+  - The caller can pass a bunch of parameters to the callee which can reach the value of these parameters while it's running,
+  - the callee can define its own local variables which should not be reached by any other function, that means that these variables can be removed from the memory once the callee finishes its job.
+  - When the callee finishes its job, it may *return* some value to the caller.
+  - Some programming languages, especially those which are derived from Algol differentiate between a *function* which **should** return a value to the caller, and a *procedure* which **shouldn't** return a value to the caller.
+  - Finally, the run-time platform (the processor in the case of compiled languages) should be able to know, when the callee finishes, where is the place of the code that should be executed next, and logically, this place is the line in the source code of the caller function which is next to the line that called the callee in the first place.
 
-In run-time context, a function `B` starts its life when it's called by another function `A`, so, the function `A` is the *caller*, that is, the function that originated the call, and the function `B` is the *callee*. The caller can pass a bunch of parameters to the callee which can reach the value of these parameters while it's running, the callee can define its own local variables which should not be reached by any other function, that means that these variables can be removed from the memory once the callee finishes its job. When the callee finishes its job, it may *return* some value to the caller [Some programming languages, especially those which are derived from Algol differentiate between a *function* which **should** return a value to the caller, and a *procedure* which **shouldn't** return a value to the caller.]. Finally, the run-time platform (the processor in the case of compiled languages) should be able to know, when the callee finishes, where is the place of the code that should be executed next, and logically, this place is the line in the source code of the caller function which is next to the line that called the callee in the first place.
+- In x86, each process has its own run-time stack, we can imagine this run-time stack as a big (or even small, that depends on practical factors) memory region that obeys the rules of stack data structure.
+  - We claim that for the purpose of explanation. But actually the matter of separated run-time stack for each process is a design decision that the operating system's kernel programmer/designer is responsible for.
+- This run-time stack is divided into multiple mini-stacks, more formally, these mini-stacks are called **stack frames**.
+  - Each stack frame is dedicated to **one** function which has been called during the execution of the program,
+  - once this function exists,
+  - its frame will be removed from the larger process stack, hence, it will be removed from the memory. 
 
-In x86, each process has its own run-time stack [We claim that for the purpose of explanation. But actually the matter of separated run-time stack for each process is a design decision that the operating system's kernel programmer/designer is responsible for.], we can imagine this run-time stack as a big (or even small, that depends on practical factors) memory region that obeys the rules of stack data structure. This run-time stack is divided into multiple mini-stacks, more formally, these mini-stacks are called *stack frames*. Each stack frame is dedicated to **one** function which has been called during the execution of the program, once this function exists, its frame will be removed from the larger process stack, hence, it will be removed from the memory. 
-
-The x86 register `EBP` (which is called the *stack frame base pointer*) contains the starting memory address of the current stack frame, and the register `ESP` (which is called the *stack pointer*) contains the memory address of the top of the stack. To push a new item into the run-time stack, an x86 instruction named `push` can be used with the value of the new item as an operand, this instruction decrements the value of `ESP` to get a new *starting* memory location to put the new value on and to keep `ESP` pointing to the top of the stack, decrementing the value of `ESP` means that the newly pushed items are stored in a lower memory location than the previous value and that means the run-time stack in x86 *grows downward* in the memory.
-
-When we need to read the value on the top of the stack and removes this value from the stack, the x86 instruction `pop` can be used which is going to store the value (which resides on the top of stack) on the specified location on its operand, this location can be a register or a memory address, after that, `pop` operation increments the value of `ESP`, so the top of stack now refers to the previous value. Note that the `pop` instruction only increments `ESP` to get rid of the popped value and don't clear it from memory by, for example, writing zeros on its place which is better for the performance, and this is one of the reasons when you refer to some random memory location, for example in C pointers, and you see some weird value that you probably don't remember that you have stored it in the memory, once upon a time, this value may have been pushed into the run-time stack and its frame has been removed. This same practice is also used in modern filesystems for the sake of performance, when you delete a file the filesystem actually doesn't write zeros in the place of the original content of the file, instead, it just refer to its location as a free space in the disk, and maybe some day this location is used to store another file (or part of it), and this is when the content of the deleted file are actually cleared from the disk.
-
-Let's get back to x86 run-time stack. To make the matter clear in how `push` and `pop` work, let's take an example. Assume that the current memory address of the top of stack (`ESP`) is `102d` and we executed the instruction `push A` where `A` is a character encoded in `UTF-16` which means its size is `2` bytes (`16` bits) and it is represented in hexadecimal as `0x0410`, by executing this `push` instruction the processor is going to subtract `2` from `ESP` (because we need to push `2` bytes into the stack) which gives us the new memory location `100d`, then the processor stores the first byte of `UTF-16` `A` (`0x04`) in the location `100d` and the second byte (`0x10`) in the location `101d` [In fact, x86 is little-endian architecture which means that `0x10` will be stored in the location `100d` while `0x04` will be stored in the location `101d` but I've kept the example in the main text as is for the sake of simplicity.], the value of `ESP` will be changed to `100d` which now represents the top of the stack.
-
-When we need to `pop` the character `A` from the top of the stack, both bytes should be read and `ESP` should be **incremented** by `2`. In this case, the new memory location `100d` can be considered as a *starting* location of the data because it doesn't store the whole value of `A` but a part of it, the case where the new memory location is not considered as starting memory location is when the newly pushed values is pushed as whole in the new memory location, that is, when the size of this value is `1` byte.
+- The x86 register `EBP` (which is called the **stack frame base pointer**) contains the starting memory address of the current stack frame,
+- and the register `ESP` (which is called the **stack pointer**) contains the memory address of the top of the stack.
+- To push a new item into the run-time stack, an x86 instruction named `push` can be used with the value of the new item as an operand,
+  - this instruction decrements the value of `ESP` to get a new *starting* memory location to put the new value on and to keep `ESP` pointing to the top of the stack,
+  - decrementing the value of `ESP` means that the newly pushed items are stored in a lower memory location than the previous value and that means the run-time stack in x86 **grows downward** in the memory.
+- When we need to read the value on the top of the stack and removes this value from the stack, the x86 instruction `pop` can be used which is going to store the value (which resides on the top of stack) on the specified location on its operand,
+  - this location can be a register or a memory address,
+- after that, `pop` operation increments the value of `ESP`, so the top of stack now refers to the previous value.
+  - Note that the `pop` instruction only increments `ESP` to get rid of the popped value and doesn't clear it from memory, 
+    - One way to clear memory is writing zeros in its place which is better for the performance,
+    - The same practice is also used in modern filesystems for the sake of performance, when you delete a file the filesystem actually doesn't write zeros in the place of the original content of the file, instead, it just refer to its location as a free space in the disk, and maybe some day this location is used to store another file (or part of it), and this is when the content of the deleted file are actually cleared from the disk.
+- Back to x86 run-time stack, to make the matter clear in how `push` and `pop` work, let's take an example.
+  - Assume that the current memory address of the top of stack (`ESP`) is `102d`
+  - we executed the instruction `push A` where `A` is a character encoded in `UTF-16` which means its size is `2` bytes (`16` bits) and it is represented in hexadecimal as `0x0410`,
+  - by executing this `push` instruction the processor is going to subtract `2` from `ESP` (because we need to push `2` bytes into the stack) which gives us the new memory location `100d`,
+  - then the processor stores the first byte of `UTF-16` `A` (`0x04`) in the location `100d` and the second byte (`0x10`) in the location `101d`
+    - In fact, x86 is little-endian architecture which means that `0x10` will be stored in the location `100d` while `0x04` will be stored in the location `101d` but I've kept the example in the main text as is for the sake of simplicity,
+  - the value of `ESP` will be changed to `100d` which now represents the top of the stack.
+  - When we need to `pop` the character `A` from the top of the stack, both bytes should be read and `ESP` should be **incremented** by `2`.
+    - In this case, the new memory location `100d` can be considered as a *starting* location of the data because it doesn't store the whole value of `A` but a part of it,
+    - the case where the new memory location is not considered as starting memory location is when the newly pushed values is pushed as whole in the new memory location, that is, when the size of this value is `1` byte.
 
 ### Calling Convention
-When a function `A` needs to call another function `B`, then as a first step `A` (the caller) should push into the stack the parameter that should be passed to `B` (the callee), that means the parameters of `B` will be stored on the stack frame of `A`, when pushing the parameters, they are pushed in a reversed order, that is, the last parameter is pushed first and so on. Then the x86 instruction `call` can be used to jump to function `B` code. Before jumping to the callee code, the instruction `call` pushes the current value of `EIP` (this is, the returning memory address) onto the stack, at this stage, the value of `EIP` is the memory address of the instruction of `A` which is right after `call B` instruction, pushing this value into the stack is going to help the processor later to decide which instruction of the running code should be executed after the function `B` finishes. Now, assume that the function `B` receives three parameters `p1`, `p2` and `p3`, the figure @fig:call-conv-1 shows the run-time stack at the stage where `call` instruction has been performed its first step (pushing `EIP`). Also, the following assembly code shows how `A` pushes the parameters then calls `B`, as you can see, after `B` finishes and the execution of `A` resumes, the value of `EAX` is moved to `ECX` and this line is just an example and not a part of calling convention.
+- When a function `A` needs to call another function `B`, then as a first step `A` (the caller) should push into the stack the parameter that should be passed to `B` (the callee),
+  - that means the parameters of `B` will be stored on the stack frame of `A`,
+- when pushing the parameters, they are pushed in a reversed order, the last parameter is pushed first and so on.
+- Then the x86 instruction `call` can be used to jump to function `B` code.
+- Before jumping to the callee code, the instruction `call` pushes the current value of `EIP` (this is, the returning memory address) onto the stack,
+  - at this stage, the value of `EIP` is the memory address of the instruction of `A` which is right after `call B` instruction,
+  - pushing this value into the stack is going to help the processor later to decide which instruction of the running code should be executed after the function `B` finishes.
+- Now, assume that the function `B` receives three parameters `p1`, `p2` and `p3`, the figure below shows the run-time stack at the stage where `call` instruction has been performed its first step (pushing `EIP`).
+- Also, the following assembly code shows how `A` pushes the parameters then calls `B`,
+  - as you can see, after `B` finishes and the execution of `A` resumes, the value of `EAX` is moved to `ECX` and this line is just an example and not a part of calling convention.
 
-```{.asm}
-A:
-; A's Code Before Calling B
+    ```{.asm}
+    A:
+    ; A's Code Before Calling B
 
-push p3
-push p2
-push p1
-call B
-mov ecx, eax
+    push p3
+    push p2
+    push p1
+    call B
+    mov ecx, eax
 
-; Rest of A's Code
-```
+    ; Rest of A's Code
+    ```
 
-![Run-time Stack Before Jumping to Function `B` Code](/assets/call-conv-1.png){#fig:call-conv-1 width=55%}
+    ![Run-time Stack Before Jumping to Function `B` Code](/assets/call-conv-1.png)
 
-When the processor starts executing function `B`, or any other function, it's the job of the function to create its own stack frame, therefore, the first piece of any function's code should be responsible for creating a new stack frame, this happens by moving the value of `ESP` (the memory address of the top of stack) to the register `EBP`, but before that, we should not lose the previous value of `EBP` (the starting memory address of the caller's stack frame), this value will be needed when the callee `B` finishes, so, the function `B` should push the value of `EBP` onto the stack and only after that it can change `EBP` to the value of `ESP` which creates a new stack frame for function `B`, at this stage, both `EBP` and `ESP` points to the top of the stack and the value which is stored in the top of the stack is memory address of the previous `EBP`, that is, the starting memory location of `A`'s stack frame. Figure @fig:call-conv-2 shows the run-time stack at this stage. The following code shows the initial instructions that a function should perform in order to create a new stack frame as we just described.
+- When the processor starts executing function `B`, or any other function, it's the job of the function to create its own stack frame,
+  - therefore, the first piece of any function's code should be responsible for creating a new stack frame,
+  - this happens by moving the value of `ESP` (the memory address of the top of stack) to the register `EBP`,
+  - but **BEFORE** that, we should not lose the previous value of `EBP` (the starting memory address of the caller's stack frame),
+    - this value will be needed when the callee `B` finishes,
+  - so, the function `B` should push the value of `EBP` onto the stack and only after that it can change `EBP` to the value of `ESP` which creates a new stack frame for function `B`,
+  - at this stage, both `EBP` and `ESP` points to the top of the stack and the value which is stored in the top of the stack is memory address of the previous `EBP`, that is, the starting memory location of `A`'s stack frame.
+  - Figure below shows the run-time stack at this stage.
+  - The following code shows the initial instructions that a function should perform in order to create a new stack frame as we just described.
+    ```{.asm}
+    B:
+    push ebp
+    mov ebp, esp
 
-```{.asm}
-B:
-push ebp
-mov ebp, esp
+    ; Rest of B's Code
+    ```
 
-; Rest of B's Code
-```
+    ![Run-time Stack After Jumping to Function `B` Code and Creating `B`'s Stack Frame](/assets/call-conv-2.png)
 
+  - Now, the currently running code is function `B` with its own stack frame which contains nothing. Depending on `B`'s code, new items can be pushed onto the stack, and as we have said before, the local variables of the function are pushed onto the stack by the function itself
+  - since x86's protected mode is a `32-bit` environment, the values that are pushed onto the stack through the instruction `push` are of size `4` bytes (`32` bits).
+  - Pushing a new item will make the value of `ESP` to change, but `EBP` remains the same until the current function finishes its work, this will make `EBP` useful when we need to reach the items that are stored in previous function's stack frame (in our case `A`),
+    - for example, the parameters or even the items that are in the current function's stack frame but are not in the top of the stack, as you know, in this case `pop` cannot be used without losing other values.
+    - Instead, `EBP` can be used as a reference to the other values.
+  - Let's take an example of that, given the run-time stack in figure @fig:call-conv-2 assume that function `B` needs to get the value of `p1`, that can be achieved by reading the memory location of the memory address `EBP + 8`.
+    - As you can see from the figure, memory address of `EBP` points to the previous value of `EBP` which its size is `4` bytes, so if we add `4` to the value in `EBP`, that is, `EBP + 4` we will get the memory address of the location which stores the resume point (`EIP` before calling `B`) which also has the size of `4` bytes,
+    - so, if we add another `4` bytes to `EBP` we will reach the item which is above the resume point, which will always (because the convention always work the same way with any function) be the first parameter if the current function receives parameters, and by adding another `4` to `EBP` we will get the second parameter and so on.
+    - The same is applicable if we would like to read values in current function's stack frame (e.g. local variables), but this time we need to subtract from `EBP` instead of adding to it. Whether we are adding to or subtracting from `EBP` the value will always be `4` and its multiples since each item in x86 protected-mode run-time stack is of `4` bytes.
+- The following assembly example of `B` reads multiple values from the stack that cannot be read with normal `pop` without distorting the stack.
 
-![Run-time Stack After Jumping to Function `B` Code and Creating `B`'s Stack Frame](/assets/call-conv-2.png){#fig:call-conv-2 width=55%}
+  ```{.asm}
+  B:
+  ; Creating new Stack Frame
+  push ebp
+  mov ebp, esp
 
-Now, the currently running code is function `B` with its own stack frame which contains nothing. Depending on `B`'s code, new items can be pushed onto the stack, and as we have said before, the local variables of the function are pushed onto the stack by the function itself, as you know, x86's protected mode is a `32-bit` environment, so, the values that are pushed onto the stack through the instruction `push` are of size `4` bytes (`32` bits).
+  push 1 ; Pushing a local variable
+  push 2 ; Pushing another local variable
 
-Pushing a new item will make the value of `ESP` to change, but `EBP` remains the same until the current function finishes its work, this will make `EBP` too useful when we need to reach the items that are stored in previous function's stack frame (in our case `A`), for example, the parameters or even the items that are in the current function's stack frame but are not in the top of the stack, as you know, in this case `pop` cannot be used without losing other values. Instead, `EBP` can be used as a reference to the other values. Let's take an example of that, given the run-time stack in figure @fig:call-conv-2 assume that function `B` needs to get the value of `p1`, that can be achieved by reading the memory location of the memory address `EBP + 8`. As you can see from the figure, memory address of `EBP` points to the previous value of `EBP` which its size is `4` bytes, so if we add `4` to the value in `EBP`, that is, `EBP + 4` we will get the memory address of the location which stores the resume point (`EIP` before calling `B`) which also has the size of `4` bytes, so, if we add another `4` bytes to `EBP` we will reach the item which is above the resume point, which will always (because the convention always work the same way with any function) be the first parameter if the current function receives parameters, and by adding another `4` to `EBP` we will get the second parameter and so on. The same is applicable if we would like to read values in current function's stack frame (e.g. local variables), but this time we need to subtract from `EBP` instead of adding to it. Whether we are adding to or subtracting from `EBP` the value will always be `4` and its multiples since each item in x86 protected-mode run-time stack is of `4` bytes. The following assembly example of `B` reads multiple values from the stack that cannot be read with normal `pop` without distorting the stack.
+  ; Reading the content 
+  ; of memory address EBP + 4
+  ; which stores the value of
+  ; the parameters p1 and moving
+  ; it to eax.
+  mov eax, [ebp + 8]
 
-```{.asm}
-B:
-; Creating new Stack Frame
-push ebp
-mov ebp, esp
+  ; Reading the value of the
+  ; first local varaible and
+  ; moving it to ebx.
+  mov ebx, [ebp - 4]
 
-push 1 ; Pushing a local variable
-push 2 ; Pushing another local variable
+  ; Rest of B's Code
+  ```
 
-; Reading the content 
-; of memory address EBP + 4
-; which stores the value of
-; the parameters p1 and moving
-; it to eax.
-mov eax, [ebp + 8]
+  - When `B` finishes and needs to return a value, this value should be stored in the register `EAX`.
+  - After that, `B` should deallocates its own stack frame, this task can be accomplished easily by popping all values of `B`'s stack frame until we reach to first value pushed value by `B` (the starting memory address of the caller `A` stack frame) which should be set to `EBP` in order to restore the stack frame of `A` as the current stack frame.
+  - After that, the top of the stack contains the returning memory address which should be loaded to `EIP` so we can resume the execution of the caller `A`, that can be done by using the x86 instruction `ret` which pops the stack to get the returning address then loads `EIP` with this value.
+  - Finally, when `A` gains the control again it can deallocate the parameters of `B` to save some memory by just popping them.
+  - The method that we have described to deallocate the whole stack frame or deallocate the parameters is the standard way that's not widely used practically for multiple reasons,
+    - one of these reasons is that `pop` needs a place to store the `pop`ped value, this place can be a register or a memory location, but what we really need is to get rid of these values, so, storing them in another place is a waste of memory.
+  - In order to explain the other way of deallocating some items from the stack consider the following code:
 
-; Reading the value of the
-; first local varaible and
-; moving it to ebx.
-mov ebx, [ebp - 4]
+    ```{.asm}
+    sub esp, 4
+    mov [esp], 539
+    ```
 
-; Rest of B's Code
-```
+  - This code is equivalent to `push 539`, it does exactly what `push` does,
+    - first it subtract `4` bytes from top of stack's memory address to get a new memory location to store the new value in,
+    - then, it stores the value in this location.
+  - The reverse operation is performed with `pop` as the following which is equivalent to `pop eax`.
 
-When `B` finishes and needs to return a value, this value should be stored in the register `EAX`. After that, `B` should deallocates its own stack frame, this task can be accomplished easily by popping all values of `B`'s stack frame until we reach to first value pushed value by `B` (the starting memory address of the caller `A` stack frame) which should be set to `EBP` in order to restore the stack frame of `A` as the current stack frame. After that, the top of the stack contains the returning memory address which should be loaded to `EIP` so we can resume the execution of the caller `A`, that's can be done by using the x86 instruction `ret` which pops the stack to get the returning address then loads `EIP` with this value. Finally, when `A` gains the control again it can deallocate the parameters of `B` to save some memory by just popping them. The method that we have described to deallocate the whole stack frame or deallocate the parameters is the standard way that's not widely used practically for multiple reasons, one of these reasons is that `pop` needs a place to store the `pop`ped value, this place can be a register or a memory location, but what we really need is to get rid of these values, so, storing them in another place is a waste of memory. In order to explain the other way of deallocating some items from the stack consider the following code:
+    ```{.asm}
+    mov eax, [esp]
+    add esp, 4
+    ```
+  - As you can see, to get rid of the `pop`ped value, only top of stack's memory address has been changed.
+  - Since every item on the stack is of size `4` bytes, then adding `4` to `ESP` makes it point to the item which is exactly above the current one in the stack, so, if we need to get rid of the value on the top of stack without getting its value and storing it somewhere else, we can simply use the following instruction `add esp, 4`.
+  - What if we want to get rid of the value on the top of the stack and the value before it? The total size of both of them is `8` bytes, so, `add esp, 8` will do what we want.
+  - This technique is applicable for both deallocating `B`'s stack frame and its parameters from `A`'s stack frame.
+  - For the former, there is a yet better technique. In order to deallocate the stack frame of the current function we can simply do the following: `mov esp, ebp`
+    - that is, move the memory address of `EBP` to `ESP`, which was the state when the callee `B` just started.
+- The following is the last part of `B` which deallocates its own stack frame and return to `A`.
 
-```{.asm}
-sub esp, 4
-mov [esp], 539
-```
+    ```{.asm}
+    B:
+    ; Previous B's Code:
+    ;        Creating new Stack Frame
+    ;        Pushing Local variable
+    ;        The Rest of Code
 
-This code is equivalent to `push 539`, it does exactly what `push` does, first it subtract `4` bytes from top of stack's memory address to get a new memory location to store the new value in, then, it stores the value in this location. The reverse operation is performed with `pop` as the following which is equivalent to `pop eax`.
+    ; Make to the of stack points
+    ; to the first value pushed
+    ; by the function "B".
+    mov esp, ebp
 
-```{.asm}
-mov eax, [esp]
-add esp, 4
-```
+    ; Pop the current top of
+    ; stack and put the value
+    ; in "EBP" to make A's
+    ; stack frame as the current.
+    pop ebp
 
-As you can see, to get rid of the `pop`ped value, only top of stack's memory address has been changed. Since every item on the stack is of size `4` bytes, then adding `4` to `ESP` makes it point to the item which is exactly above the current one in the stack. So, if we need to get rid of the value on the top of stack without getting its value and storing it somewhere else, we can simply use the following instruction `add esp, 4`. What if we want to get rid of the value on the top of the stack and the value before it? The total size of both of them is `8` bytes, so, `add esp, 8` will do what we want. This technique is applicable for both deallocating `B`'s stack frame and its parameters from `A`'s stack frame. For the former, there is a yet better technique. In order to deallocate the stack frame of the current function we can simply do the following: `mov esp, ebp`, that is, move the memory address of `EBP` to `ESP`, which was the state when the callee `B` just started. The following is the last part of `B` which deallocates its own stack frame and return to `A`.
+    ; Jump the the resume point.
+    ret
+    ```
 
-```{.asm}
-B:
-; Previous B's Code:
-;        Creating new Stack Frame
-;        Pushing Local variable
-;        The Rest of Code
-
-; Make to the of stack points
-; to the first value pushed
-; by the function "B".
-mov esp, ebp
-
-; Pop the current top of
-; stack and put the value
-; in "EBP" to make A's
-; stack frame as the current.
-pop ebp
-
-; Jump the the resume point.
-ret
-```
-
-The details of calling a function that we have just described are **implementation details** and we mentioned previously that these implementation details of function's invocation are known as calling conventions. The calling convention that we have described is known as `cdecl` which stands for *C declaration*, there are other conventions, which means the one which we have described is not an strict standard for x86 architecture, instead, the operating systems, compilers and low-level code writers can decide which calling convention that they would like to use or maybe make up a wholly new one according to their objective. However, the reason behind choosing `cdecl` to explain here is that it is a well-known and widely used calling convention, also, it serves our purpose of explaining the basics of x86 run-time stack.
+  - The details of calling a function that we have just described are **implementation details** and we mentioned previously that these implementation details of function's invocation are known as calling conventions.
+  - The calling convention that we have described is known as `cdecl` which stands for *C declaration*,
+  - there are other conventions, which means the one which we have described is not an strict standard for x86 architecture, instead, the operating systems, compilers and low-level code writers can decide which calling convention that they would like to use or maybe make up a wholly new one according to their objective.
+  - However, the reason behind choosing `cdecl` to explain here is that it is a well-known and widely used calling convention, also, it serves our purpose of explaining the basics of x86 run-time stack.
 
 ### Growth Direction of Run-time Stack
-When we explained how x86 instructions `push` and `pop` work, we have claimed that the x86 run-time stack *grows downward*, so, what does growing downward or upward exactly means? Simply, when we said that x86 run-time stack grows downward we meant the the older items of stack are pushed on larger memory addresses while the most recent ones are pushed onto smaller memory addresses. For example, starting from the memory address `104d`, let's assume we have pushed the value `A` after that we pushed the value `B`, then `A`'s memory location will be `104d` while `B`'s memory location will be `100d`, so the new values will always be pushed on the bottom of the old ones in the memory. 
+- When we explained how x86 instructions `push` and `pop` work, we have claimed that the x86 run-time stack *grows downward*, so, what does growing downward or upward exactly means?
+  - Simply, when we said that x86 run-time stack grows downward we meant the the older items of stack are pushed on larger memory addresses while the most recent ones are pushed onto smaller memory addresses.
+  - For example, starting from the memory address `104d`, let's assume we have pushed the value `A` after that we pushed the value `B`, then `A`'s memory location will be `104d` while `B`'s memory location will be `100d`, so the new values will always be pushed on the bottom of the old ones in the memory. 
 
-![An Example of a Run-Time Stack with Three Items](/assets/Fig10062021_0.png){#fig:10062021_0 width=35%}
+    ![An Example of a Run-Time Stack with Three Items](/assets/Fig10062021_0.png)
 
-What makes we claim that, for instance, the address `100d` is at the bottom of `104d` instead of the other way around is how we visualize the run-time stack inside the main memory. Let's look at the figure @fig:10062021_0 which shows a run-time stack that contains three items `M`, `R` and `A` and all of them are of `4` bytes, on the right side of the figure we can see the starting memory address of each item. As we can see, in this visualization of the run-time stack, the smaller memory addresses are on the bottom and the larger memory addresses are on the top.
+- What makes we claim that, for instance, the address `100d` is at the bottom of `104d` instead of the other way around is how we visualize the run-time stack inside the main memory.
+- Let's look at the figure above which shows a run-time stack that contains three items `M`, `R` and `A` and all of them are of `4` bytes,
+  - on the right side of the figure we can see the starting memory address of each item.
+  - As we can see, in this visualization of the run-time stack, the smaller memory addresses are on the bottom and the larger memory addresses are on the top.
+  - From the figure we can see that the value of `ESP` is `8d`
+    - As a reminder, don't forget that all these memory address are actually **offsets** inside a stack segment and not a whole memory address.
+  - let's assume that we would like to run the instruction `push C` on this run-time stack, as we have mentioned before, the instruction `push` of x86 is going to decrease the value of `ESP` by a size decided by the architecture (`4` bytes in our case) in order to get a new starting memory address for the new item.
+  - So, `push` is going to subtract `4d` (The size of pushed item `C` in bytes) from `8d` (current `ESP` value) which gives us the new starting memory location `4d` for the item `C`.
+  - If we visualize the run-time stack after pushing `C` it will be the one as on figure below and we can see, depending on the way of `push` instruction works, that the stack grew downwards by pushing the new item `C` on the bottom.
+  - So, according to this visualization of run-time stack, which puts larger memory addresses on the top and smaller on the bottom, we can say x86 run-time stack grows downward *by default*. 
 
-From the figure we can see that the value of `ESP` is `8d` [As a reminder, don't forget that all these memory address are actually **offsets** inside a stack segment and not a whole memory address.], let's assume that we would like to run the instruction `push C` on this run-time stack, as we have mentioned before, the instruction `push` of x86 is going to decrease the value of `ESP` by a size decided by the architecture (`4` bytes in our case) in order to get a new starting memory address for the new item. So, `push` is going to subtract `4d`  (The size of pushed item `C` in bytes) from `8d` (current `ESP` value) which gives us the new starting memory location `4d` for the item `C`. If we visualize the run-time stack after pushing `C` it will be the one as on figure @fig:10062021_1 and we can see, depending on the way of `push` instruction works, that the stack grew downwards by pushing the new item `C` on the bottom. So, according to this visualization of run-time stack, which puts larger memory addresses on the top and smaller on the bottom, we can say x86 run-time stack grows downward *by default*. 
+    ![A New Item Pushed Into a Stack that Grows Downward](/assets/Fig10062021_1.png)
 
-![A New Item Pushed Into a Stack that Grows Downward](/assets/Fig10062021_1.png){#fig:10062021_1 width=35%}
+- This visualization is just one way to view how the run-time stack grows, there may others too
+  - the most obvious one is to reverse the one that we just described by putting the smaller addresses on the top and the larger addresses on the bottom
+  - Shown in figure @fig:10062021_2, you can note that in contrast to figure @fig:10062021_1 the smallest address `4d` is on top, so, based on this visualization the stack grows upward!
+  - Actually this latter visualization of run-time stack is the one which is used in Intel's manual and the term **expand-up** is the term that is used in the manual to describe the direction of stack growth.
 
-This visualization is just one way to view how the run-time stack grows, which means they may be other visualizations, and the most obvious one is to reverse the one that we just described by putting the smaller addresses on the top and the larger addresses on the bottom as shown in figure @fig:10062021_2, you can note that in contrast to figure @fig:10062021_1 the smallest address `4d` is on top, so, based on this visualization the stack grows upward! Actually this latter visualization of run-time stack is the one which is used in Intel's manual and the term *expand-up* is the term that is used in the manual to describe the direction of stack growth.
+    ![A Stack that Grows Upward Instead of Downward](/assets/Fig10062021_2.png)
 
-![A Stack that Grows Upward Instead of Downward](/assets/Fig10062021_2.png){#fig:10062021_2 width=35%}
-
-To sum it up, the direction in which the run-time stack grows (down or up) depends on how do you visualize the run-time stack, as in figure @fig:10062021_1 or as in figure @fig:10062021_2. In our discussion in this book we are going to depend on the first visualization[And many other books actually uses the first visualization as I recall and for that I chose it in this book. And according to my best knowledge the only reference that I've seen that depends on the second visualization is Intel's manual.], so, simply, the run-time stack of x86 grows downward.
+- To sum it up, the direction in which the run-time stack grows (down or up) depends on how do you visualize the run-time stack, as in figure @fig:10062021_1 or as in figure @fig:10062021_2.
+- In our discussion in this book we are going to depend on the first visualization, so, simply, the run-time stack of x86 grows downward.
+  - many other books actually uses the first visualization as I recall and for that I chose it in this book.
+  - the only reference that I've seen that depends on the second visualization is Intel's manual.
 
 ### The Problem of Resizing the Run-time Stack
-We have emphasized that x86 run-time stack **by default** grows downward, this default behavior can be changed if we wish to, which is going to make the run-time stack to grow upwards instead and the way to do that is to use expansion-direction flag of run-time stack's segment descriptor,  we have mentioned this flag when explained the structure of segment descriptor and postponed its details till here. 
+- We have emphasized that x86 run-time stack **by default** grows downward,
+- this default behavior can be changed if we wish to, which is going to make the run-time stack to grow upwards instead
+- the way to do that is to use expansion-direction flag of run-time stack's segment descriptor.
+  - When we want the run-time stack to grow downward (or in Intel's term **expand-up**) the value of this flag should be `0`,
+  - on the other hand, when we want the run-time stack to grow upward (in Intel's term: **expand-down**) the value of this flag should be `1`.
+- Modern operating systems use the default behavior (downward growth), we will see that this design decision is taken due to the choice of flat memory model by modern operating systems.
+- However, the other available option (upward growth) is there to solve a potential problem and whether this problem is going to show up in a specific kernel depends on how this kernel's architecture is designed, that is, which memory model is used in this kernel. 
+  - This problem, which we can solve by making the run-time stack grows upward instead, is related to the need of increasing the size of run-time stack
+  - and the fact that the run-time stack stores memory addresses on it.
+    - eg the previous values of `EBP` and `EIP`.
+    - Also the application programmer may store memory addresses of local variables in the stack (e.g. by using pointers in C).
+  - Let's assume that our kernel created a new stack segment for a specific process `X` and this stack segment has a fixed size which is `50` bytes  for example.
+    - As you may recall, the size of the segment can be decided by the base address of the segment and its limit as specified in the segment's descriptor.
+  - The process `X` starts its work and at some point of time its run-time stack of size `50` bytes becomes full which means that we need to resize it and make it bigger so it can hold more items,
+  - let's assume the new size will be `60` bytes. 
+    ![Process X's Run-time Stack](/assets/Fig10062021_3.png)
 
-When we want the run-time stack to grow downward (or in Intel's term which depends on the second visualization of run-time stack: **expand-up**) the value of this flag should be `0`, on the other hand, when we want the run-time stack to grow upward (in Intel's term: **expand-down**) the value of this flag should be `1`. Modern operating systems use the default behavior (downward growth), we will see that this design decision is taken due to the choice of flat memory model by modern operating systems. However, the other available option (upward growth) is there to solve a potential problem and whether this problem is going to show up in a specific kernel depends on how this kernel's architecture is designed, that is, which memory model is used in this kernel. 
+  - Before going any further with our discussion, let's see the figure @fig:10062021_3 which represents a snapshot of process `X`'s run-time stack when it became full.
+  - We can see from the figure that `X`'s stack segment starts from the **physical** memory address `300d` (segment's base address) and ends at the **physical** memory address `250d`,
+  - also, the items of run-time stack are referred to based on their offsets inside the stack segment.
+  - We can see that a bunch of values have been pushed onto the stack, some of those values are shown on the figure and some other are omitted and replaced by dots.
+  - Normal values are called "some value" in the figure and the last pushed value in the stack is the value `Z`.
+  - Also, a value which represents a **logical memory address** has been pushed onto the stack, more accurately, this value represents an **offset** within the current stack segment,
+    - a **full** logical memory address actually consists of both offset **and** segment selector as we have explained earlier in this chapter when we discussed address translation.
+  - But for the sake of simplicity, we are going call this stored value as "memory address" or "memory location" in our current explanation.
+  - As we explained earlier, all memory addresses that the processes work with are logical and not physical.
+  - The value `26d` is a local variable `P` of the type pointer (as in C) which points to another local variable `R` that has the value `W` and is stored in the memory location `26d`. 
 
-This problem, which we can solve by making the run-time stack grows upward instead of downward, is related to the need of increasing the size of run-time stack and the fact that the run-time stack stores memory addresses [The previous values of `EBP` and `EIP`. Also the application programmer may store memory addresses of local variables in the stack (e.g. by using pointers in C).] on it. Let's assume that our kernel created a new stack segment for a specific process `X` and this stack segment has a fixed size which is `50` bytes [As you may recall, the size of the segment can be decided by the base address of the segment and its limit as specified in the segment's descriptor.] for example. The process `X` starts its work and at some point of time its run-time stack of size `50` bytes becomes full which means that we need to resize it and make it bigger so it can hold more items, let's assume the new size will be `60` bytes. 
+    ![Process X's Run-time Stack After Resize (Grows Downward)](/assets/Fig10062021_4.png)
 
-![Process X's Run-time Stack](/assets/Fig10062021_3.png){#fig:10062021_3 width=35%}
+  - Figure @fig:10062021_4 shows `X`'s stack after resize, as you can see we have got our new free space of `10` bytes,
+  - also, because the stack grows downward so the new free space should be added on the bottom of the stack to be useful which means the previous offsets should be changed, therefore, the largest offset `50d` has been updated to `60d` by adding `10d` (which is the newly added free space to the stack in bytes) to it and so on for the rest of offsets,
+  - also, `ESP` has been simply updated in the same manner.
+- Now we can see that the process of updating the offsets, that we are forced to perform because the stack grows downward, has caused a problem in the offsets which have been pushed onto the stack before resizing it.
+  - You can see the pointer `P` which still has the original value `26d`, that means it doesn't point to the the variable `R` anymore, instead it is going to point to another memory location now with a value other than `W`, and the same problem holds for all pushed `EBP` values on `X`'s stack.
+  - A potential solution for this problem is to update all stack items that contain memory addresses in the range of the stack after resizing it, exactly as we have done with `EBP`,
+- A more simpler solution is to make the stack to grow upwards instead of downwards!
+- Modern operating systems solves this problem by not dividing the memory into segments but they use flat memory model which views the memory as one big segment for all data, code and stacks.
 
-Before going any further with our discussion, let's see the figure @fig:10062021_3 which represents a snapshot of process `X`'s run-time stack when it became full. We can see from the figure that `X`'s stack  segment starts from the **physical** memory address `300d` (segment's base address) and ends at the **physical** memory address `250d`, also, the items of run-time stack are referred to based on their offsets inside the stack segment. We can see that a bunch of values have been pushed onto the stack, some of those values are shown on the figure and some other are omitted and replaced by dots which means that there are more values here in those locations. Normal values are called "some value" in the figure and the last pushed value in the stack is the value `Z`. Also, a value which represents a **logical memory address** has been pushed onto the stack, more accurately, this value represents an **offset** within the current stack segment, a **full** logical memory address actually consists of both offset **and** segment selector as we have explained earlier in this chapter when we discussed address translation. But for the sake of simplicity, we are going call this stored value as "memory address" or "memory location" in our current explanation. As we explained earlier, all memory addresses that the processes work with are logical and not physical. The value `26d` is a local variable `P` of the type pointer (as in C) which points to another local variable `R` that has the value `W` and is stored in the memory location `26d`. 
+    ![Process X's Run-time Stack (Grows Upward)](/assets/Fig12062021_1.png)
 
-![Process X's Run-time Stack After Resize (Grows Downward)](/assets/Fig10062021_4.png){#fig:10062021_4 width=35%}
+- Now let's see what happens in the same scenario but with changing the growth direction of the stack from downward which caused the problem to upwards.
+  - In this case, as we have said before, the new items will be stored on the larger memory addresses (offsets to be more accurate).
+  - Figure @fig:12062021_1 shows the same snapshot of `X`'s run-time of stack as in the one of figure @fig:10062021_3 but this time it grows upwards instead of downward.
+  - You can notice that the older values are now on the bottom of the stack, that is, on smaller memory addresses
+  - what interests us in this stack is the entry which stores the memory address `20d` that points to the memory location which has the value `W` and it is the one which caused the problem in the first place.
+  - When the stack was growing downward, the memory location of the value `W` was `26d`, but this time it is `20d`.
+  - So, what happens when we need to resize this run-time stack?
+  - In the same way of the previous one, the limit of the stack (its largest offset) will be increased from `50d` to `60d` as shown in figure @fig:12062021_2,
+  - but in contrast to the previous one, we don't need to update the value of `ESP` anymore,
+    - because as you can see from the two figures @fig:12062021_1 and @fig:12062021_2 the memory address `50d` represents the top of the stack on both stacks.
+  - The same holds true for the stack item which stores the memory address `20d`, we don't need to update it because the value `W` is still on the same memory address (offset) and can be pointed to by the memory address `20d`.
+  - So, we can say that deciding the direction of run-time stack growth to be upward instead of downward can easily solve the problem of getting wrong stored memory address after resizing the run-time stack and that's when we use segmentation as a way of viewing the memory.
+  - Actually, the well-know **stack overflow** vulnerability in x86 is also caused by stack growing downward and can be avoided easily in growing upwards stacks!
 
-Figure @fig:10062021_4 shows `X`'s stack after resize, as you can see we have got our new free space of `10` bytes, also, because the stack grows downward so the new free space should be added on the bottom of the stack to be useful which means the previous offsets should be changed, therefore, the largest offset `50d` has been updated to `60d` by adding `10d` (which is the newly added free space to the stack in bytes) to it and so on for the rest of offsets, also, `ESP` has been simply updated in the same manner.
-
-Now we can see that the process of updating the offsets, that we are forced to perform because the stack grows downward, has caused a problem in the offsets which have been pushed onto the stack before resizing it. You can see the pointer `P` which still has the original value `26d`, that means it doesn't point the the variable `R` anymore, instead it is going to point to another memory location now with a value other than `W`, and the same problem holds for all pushed `EBP` values on `X`'s stack.
-
-A potential solution for this problem is to update all stack items that contain memory addresses in the range of the stack after resizing it, exactly as we have done with `EBP`, but more simpler solution is to make the stack to grow upwards instead of downwards! Modern operating systems solves this problem by not dividing the memory into segments but they use flat memory model which views the memory as one big segment for all data, code and stacks.
-
-![Process X's Run-time Stack (Grows Upward)](/assets/Fig12062021_1.png){#fig:12062021_1 width=35%}
-
-Now let's see what happens in the same scenario but with changing the growth direction of the stack from downward which caused the problem to upwards. In this case, as we have said before, the new items will be stored on the larger memory addresses (offsets to be more accurate). Figure @fig:12062021_1 shows the same snapshot of `X`'s run-time of stack as in the one of figure @fig:10062021_3 but this time it grows upwards instead of downward. You can notice that the older values are now on the bottom of the stack, that is, on smaller memory addresses, what interests us in this stack is the entry which stores the memory address `20d` that points to the memory location which has the value `W` and it is the one which caused the problem in the first place. When the stack was growing downward, the memory location of the value `W` was `26d`, but this time it is `20d`. So, what happens when we need to resize this run-time stack?
-
-In the same way of the previous one, the limit of the stack (its largest offset) will be increased from `50d` to `60d` as shown in figure @fig:12062021_2, but in contrast to the previous one, we don't need to update the value of `ESP` anymore,  because as you can see from the two figures @fig:12062021_1 and @fig:12062021_2 the memory address `50d` represents the top of the stack on both stacks. The same holds true for the stack item which stores the memory address `20d`, we don't need to update it because the value `W` is still on the same memory address (offset) and can be pointed to by the memory address `20d`. So, we can say that deciding the direction of run-time stack growth to be upward instead of downward can easily solve the problem of getting wrong stored memory address after resizing the run-time stack [Actually, the well-know stack overflow vulnerability in x86 is also caused by stack growing downward and can be avoided easily in growing upwards stacks!] and that's when we use segmentation as a way of viewing the memory.
-
-![Process X's Run-time Stack (Grows Upward) Resized](/assets/Fig12062021_2.png){#fig:12062021_2 width=35%}
+    ![Process X's Run-time Stack (Grows Upward) Resized](/assets/Fig12062021_2.png)
 
 ## x86 Interrupts
-Event-driven programming is a common programming paradigm that is used in many areas of programming. One of these areas is graphical user interface (GUI) programming, also, it is common in game development, furthermore, some network programming frameworks use this paradigm. In this paradigm, the program is driven by *events*, that is, it keeps idle and waiting for any even to occur and once an event occurs the program starts to work by handling this event, for example, a mouse click is considered as an event in GUI programming. When an event occurs, the program handles this event through, usually, a separated function which is dedicated for this event, this function is known as a *handler*. In GUI programming for example, when the user clicks on a specific button, that is, when this event occurs, a function specified for this event on this button (the handler) is called to perform some operation after this click, such as, save a document or close the application.
+- Event-driven programming is a common programming paradigm that is used in many areas of programming.
+  - One of these areas is graphical user interface (GUI) programming,
+  - also, it is common in game development,
+  - some network programming frameworks use this paradigm.
+- In this paradigm, the program is driven by *events*, 
+  - that is, it keeps idle and waiting for any event to occur and once an event occurs the program starts to work by handling this event,
+  - for example, a mouse click is considered as an event in GUI programming.
+- When an event occurs, the program handles this event through, usually, a separated function which is dedicated for this event,
+  - this function is known as a **handler**.
+  - In GUI programming for example, when the user clicks on a specific button, that is, when this event occurs, a function specified for this event on this button (the handler) is called to perform some operation after this click, such as, save a document or close the application.
 
-This paradigm is also used by x86. When a process is running, something can *interrupt* (an event occurred) the processor which is going, in this case, to stop the execution of the current process temporarily, and call the suitable *interrupt handler* (also called *interrupt service routine*) to handle the current interrupt, after handling the interrupt, the processor can resume the process which was running before the interrupt occurred.
+- This paradigm is also used by x86.
+- When a process is running, something can **interrupt** (an event occurred) the processor which is going, in this case, to stop the execution of the current process temporarily, and call the suitable **interrupt handler** (also called **interrupt service routine**) to handle the current interrupt,
+- after handling the interrupt, the processor can resume the process which was running before the interrupt occurred.
+- One example of the usage of interrupts in this low-level environment is the **system timer**.
+  - In the hardware level, there could be a system timer which interrupts the processor in each `X` period of time
+  - and this type of interrupt is the one that makes multitasking possible in uniprocessor systems.
+  - When a processor is interrupted by the system timer, it can call the kernel which can change the currently running process to another one;
+    - this operation known as **scheduling** which its goal is distributing the time of the processor to the multiple processes in the system.
+  - Another example of using interrupts is when the user of an operating system presses some keys on the keyboard, these events of pressing keyboard keys should be sent to the kernel which is going to delegate the **device driver** of the keyboard to handle these events in a proper way, in this case, with each key press, the keyboard is going to interrupt the processor and request to handle these events.
+      - That's why in some kernel's designs, especially, monolithic kernel keeps the device drivers as a part of the kernel.
 
-One example of the usage of interrupts in this low-level environment is the *system timer*. In the hardware level, there could be a system timer which interrupts the processor in each `X` period of time and this type of interrupt is the one that makes multitasking possible in uniprocessor systems. When a processor is interrupted by the system timer, it can call the kernel which can change the currently running process to another one; this operation known as *scheduling* which its goal is distributing the time of the processor to the multiple processes in the system.
+- In x86, both hardware and software can interrupt the processor,
+  - system timer and keyboard are examples of *hardware interrupts*
+  - the *software interrupt* can occur by using the x86 instruction `int` which we have used when we wrote our bootloader,
+    - the operand of this instruction is the *interrupt number*, for example, in our bootloader we have used the following line `int 10h`,
+    - in this case, the interrupt number is `10h` (`16d`) 
+    - when the processor is interrupted by this instruction, it is going to call the handler of interrupt number `10h`.
+  - Software interrupt can be used to implement what is known as **system calls**
+    - they provide a way for user applications to call a specific kernel's code that gives the applications some important services such as manipulating the filesystem (e.g. reading or writing files, create new file or directories, etc.) or creating new process and so on in a way that resembles the one that we used to call BIOS services. 
 
-Another example of using interrupts is when the user of an operating system presses some keys on the keyboard, these events of pressing keyboard keys should be sent to the kernel which is going to delegate the *device driver* [That's why in some kernel's designs, especially, monolithic kernel keeps the device drivers as a part of the kernel.] of the keyboard to handle these events in a proper way, in this case, with each key press, the keyboard is going to interrupt the processor and request to handle these events.
-
-In x86, both hardware and software can interrupt the processor, system timer and keyboard are examples of *hardware interrupts* while the *software interrupt* can occur by using the x86 instruction `int` which we have used when we wrote our bootloader, the operand of this instruction is the *interrupt number*, for example, in our bootloader we have used the following line `int 10h`, in this case, the interrupt number is `10h` (`16d`) and when the processor is interrupted by this instruction, it is going to call the handler of interrupt number `10h`. Software interrupt can be used to implement what is known as *system calls* which provide a way for user applications to call a specific kernel's code that gives the applications some important services such as manipulating the filesystem (e.g. reading or writing files, create new file or directories, etc.) or creating new process and so on in a way that resembles the one that we used to call BIOS services. 
-
-In addition to interrupts, *exceptions* can be considered as another type of events which also stop the processor from its current job temporarily and make it handle it and then resume its job after that. The main difference between exceptions and interrupts in x86 is that the former occurs when an error happens in the environment, for example, when some code tries to divide some number by zero, an exception will be generated and some handler should do something about it, we can perceive the exceptions of x86 as the exceptions of some programming languages such as C++ and Java.
+- In addition to interrupts, **exceptions** can be considered as another type of events
+  - they also stop the processor from its current job temporarily and make it handle it and then resume its job after that.
+- The main difference between exceptions and interrupts in x86 is that the former occurs when an error happens in the environment,
+  - for example, when some code tries to divide some number by zero, an exception will be generated and some handler should do something about it, we can perceive the exceptions of x86 as the exceptions of some programming languages such as C++ and Java.
 
 ### Interrupt Descriptor Table
-In x86, there is a table known as *interrupt descriptor table* (`IDT`), also may called *interrupt vector table* but the term that Intel uses is the former one while the latter are used to describe this kind of tables as a concept in some works of literature and not the name of the table on a specific architecture. `IDT` resides in the memory and tells the processor how to reach to the handler of a given interrupt number. The entries of `IDT` are known as *gate descriptors* and the size of each one of them is `8` bytes same as `GDT` and `LDT`. At most, `IDT` can contain `256` gate descriptors and the base memory address of `IDT` is stored in a special register known as `IDTR`.
+- In x86, there is a table known as **interrupt descriptor table** (`IDT`), also may called **interrupt vector table**
+  - Intel uses is the former term while the latter are used to describe this kind of tables as a concept in some works of literature and not as the name of the table on a specific architecture.
+  - `IDT` resides in the memory and tells the processor how to reach to the handler of a given interrupt number.
+  - The entries of `IDT` are known as **gate descriptors** 
+  - the size of each one of them is `8` bytes same as `GDT` and `LDT`.
+  - At most, `IDT` can contain `256` gate descriptors
+  - the base memory address of `IDT` is stored in a special register known as `IDTR`.
+  
+    ![Gate Descriptor Structure for Interrupt and Trap Gates](/assets/Fig210621_0.png)
 
-![Gate Descriptor Structure for Interrupt and Trap Gates](/assets/Fig210621_0.png){#fig:210621_0 width=50%}
+- The gate descriptors in the `IDT` table can be of three types,
+  - *task gate*,
+  - *interrupt gate*
+  - and *trap gate*,
+- our focus currently will be on the latter two.
+- The structure of both interrupt and trap gate descriptor is shown in figure @fig:210621_0.
+- a gate descriptor of the `IDT` should point to the memory address of the interrupt handler's code, we can see in the figure that bytes `2` and `3` should contain a segment selector, which is the segment selector of handler's code, 
+  - that is, the index of the code segment that contains handler's code,
+- An important difference between `GDT` and `IDT` here, in former the base address of a segment is a linear address, while the base address of the handler is a logical address. 
+- The offset of the first handler's instruction should be set in the descriptor,
+  - this will be useful if the handler's code is just a part of the whole code segment which is presented in the segment selector field.
+- The offset in the gate descriptor is divided into two parts,
+  - the least significant`2` bytes of the offset should be loaded into bytes `0` and `1` of the descriptor,
+  - while the most significant`2` bytes of the offset should be loaded into bytes `6` and `7`.
+  - The least significant nibble of byte `4` is reserved and the most significant nibble of byte `4` should always be `0d`.
+- The most significant bit of byte `5` is present flag (`P` flag), when its value is `0` that means the code that this descriptor is pointing to is not loaded into memory, while the value `1` means otherwise.
+- The descriptor privilege level field (`DPL`) contains the privilege level of the handler,
+  - it occupies the second and third least significant bit of byte `5`.
+- The value of fourth, sixth and seventh least significant bits of byte `5` should always be `0b`, `1b` and `1b` respectively.
+- The flag which is called `D` in the figure specifies the size of the gate descriptor itself whether it is `32` bits, when`D` flag = `1`, or `16` bits when `D` flag = `0`,
+  - the former should always be our choice in protected-mode, while the latter should always be our choice in real-mode.
+- The flag which is called `T` in the figure specifies whether the gate is an interrupt gate, when `T` flag = `0`, or the gate is an trap gate, when `T` flag = `1`.
 
-The gate descriptors in the `IDT` table can be of three types, *task gate*, *interrupt gate* and *trap gate*, our focus currently will be on the latter two. The structure of both interrupt and trap gate descriptor is shown in figure @fig:210621_0. As we have said earlier, a gate descriptor of the `IDT` should point to the memory address of the interrupt handler's code. We can see in the figure that bytes `2` and `3` should contain a segment selector, which is the segment selector of handler's code, that is, the index of the code segment that contains handler's code, we can see an important difference between `GDT` and `IDT` here. In the former the base address of a segment is a linear address, while the base address of the handler is a logical address. 
+- The difference between interrupt and trap gates is too simple,
+  - when a handler defined as an interrupt gate is called, the processor is going to disable the ability to signal a new interrupt until the handler returns, that is, the execution of the handler will not interrupted until it finishes its job and return to the caller,
+    - of course there are some exceptions, a type of interrupts known as *non-maskable interrupts* (`NMI`) will interrupt the execution of the current code even if the interruption is disabled,
+    - non-maskable interrupts occur when some catastrophic event (from the hardware perspective) happens in the system.
+  - On the other hand, the handler that is defined as a trap gate can be interrupted by any new interrupt, that is, the interruption will not be disabled by the processor. 
 
-The offset of the first handler's instruction should be set in the descriptor, this will be useful if the handler's code is just a part of the whole code segment which is presented in the segment selector field. The offset in the gate descriptor is divided into two parts, the least significant`2` bytes of the offset should be loaded into bytes `0` and `1` of the descriptor, while the most significant`2` bytes of the offset should be loaded into bytes `6` and `7`.
+- However, disabling interruption is an operation that can be performed by the code by using the x86 instruction `cli` (still, non-maskable interrupts are excepted) which stands for *clear interrupt flag* and can be enabled again by using the instruction `sti` which stands for *set interrupt flag*, both of these instructions manipulate the value of *interrupt flag* which is a part of the register `EFLAGS`.
 
-The least significant nibble of byte `4` is reserved and the most significant nibble of byte `4` should always be `0d`. The most significant bit of byte `5` is present flag (`P` flag), when its value is `0` that means the code that this descriptor is pointing to is not loaded into memory, while the value `1` means otherwise. The descriptor privilege level field (`DPL`) contains the privilege level of the handler, it occupies the second and third least significant bit of byte `5`. The value of fourth, sixth and seventh least significant bits of byte `5` should always be `0b`, `1b` and `1b` respectively. The flag which is called `D` in the figure specifies the size of the gate descriptor itself whether it is `32` bits, when`D` flag = `1`, or `16` bits when `D` flag = `0`, the former should always be our choice in protected-mode, while the latter should always be our choice in real-mode. The flag which is called `T` in the figure specifies whether the gate is an interrupt gate, when `T` flag = `0`, or the gate is an trap gate, when `T` flag = `1`.
-
-The difference between interrupt and trap gates is too simple, when a handler defined as an interrupt gate is called, the processor is going to disable the ability to signal a new interrupt until the handler returns, that is, the execution of the handler will not interrupted until it finishes its job and return to the caller, of course there are some exceptions, a type of interrupts known as *non-maskable interrupts* (`NMI`) will interrupt the execution of the current code even if the interruption is disabled, non-maskable interrupts occur when some catastrophic event (from the hardware perspective) happens in the system. On the other hand, the handler that is defined as a trap gate can be interrupted by any new interrupt, that is, the interruption will not be disabled by the processor. 
-
-However, disabling interruption is an operation that can be performed by the code by using the x86 instruction `cli` (still, non-maskable interrupts are excepted) which stands for *clear interrupt flag* and can be enabled again by using the instruction `sti` which stands for *set interrupt flag*, both of these instructions manipulate the value of *interrupt flag* which is a part of the register `EFLAGS`.
-
-Now, let's assume that we have defined a gate descriptor for a handler, let's name it `A`. The question is, which interrupt the handler `A` is going to handle? In other words, for which interrupt number the processor is going to call the code of `A` to handle the interrupt? In fact, that depends on the index of `A`'s gate descriptor in the `IDT` table. Let's assume that the index is `0d`, then `A`'s code will be called when the interrupt number `0` is signaled, that means the term interrupt number is a synonym for entry's index number in `IDT` table
-
-In protected-mode, interrupt numbers, that is `IDT` entries indices, from `0` to `21` have specific meaning defined by x86 architecture itself, for example, the interrupt number that is reserved for division by zero exception is the interrupt number `0` and, in our example, the code of `A` will be called when some other code divides a number by zero. Beside interrupt numbers `0` to `21`, the range of interrupts number from `22` to `31` are reserved, and the interrupt numbers from `32` to `255` are available for the system programmer to decide their meanings, however, not all of their descriptors should be filled, only the needed ones will be enough.
+- Now, let's assume that we have defined a gate descriptor for a handler, let's name it `A`. The question is, which interrupt the handler `A` is going to handle?
+  - In other words, for which interrupt number the processor is going to call the code of `A` to handle the interrupt?
+  - In fact, that depends on the index of `A`'s gate descriptor in the `IDT` table.
+  - Let's assume that the index is `0d`, then `A`'s code will be called when the interrupt number `0` is signaled, that means the term interrupt number is a synonym for entry's index number in `IDT` table
+- In protected-mode, interrupt numbers, that is `IDT` entries indices, from `0` to `21` have specific meaning defined by x86 architecture itself,
+  - for example, the interrupt number that is reserved for division by zero exception is the interrupt number `0`
+  - and, in our example, the code of `A` will be called when some other code divides a number by zero.
+- Beside interrupt numbers `0` to `21`, the range of interrupts number from `22` to `31` are reserved,
+- and the interrupt numbers from `32` to `255` are available for the system programmer to decide their meanings,
+  - however, not all of their descriptors should be filled, only the needed ones will be enough.
 
 #### The Register `IDTR`
-In same way as `GDT`, we should tell the processor where the `IDT` reside in the memory and that can be performed by the instruction `lidt` which stands for *l*oad `IDT`, this instructions works as `lgdt`, it takes an operand and loads it to the register `IDTR` which will be used later by the processor to reach to the `IDT` table. 
+- In same way as `GDT`, we should tell the processor where the `IDT` reside in the memory and that can be performed by the instruction `lidt` which stands for *l*oad `IDT`, 
+  - this instructions works as `lgdt`, it takes an operand and loads it to the register `IDTR` which will be used later by the processor to reach to the `IDT` table. 
 
-The structure of `IDTR` is same as `GDTR`, its size is `48` bits and it's divided into two parts, the first part represents the size of the `IDT` in bytes, that is, the `IDT`'s limit, this field starts from bit `0` of `IDTR` and ends at bit `15`. Starting from bit `16` up to bit `47` the base linear address [As we have mentioned multiple time that in our current case, where the paging is disabled, a linear address is same as physical address.] where `IDT` is reside should be set.
+- The structure of `IDTR` is same as `GDTR`,
+  - its size is `48` bits
+  - and it is divided into two parts,
+    - the first part represents the size of the `IDT` in bytes, that is, the `IDT`'s limit,
+    - this field starts from bit `0` of `IDTR` and ends at bit `15`.
+    - Starting from bit `16` up to bit `47` the base linear address where `IDT` is reside should be set.
+    - As we have mentioned, in our current case, where the paging is disabled, a linear address is same as physical address.
