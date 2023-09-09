@@ -22,4 +22,5 @@ I will be updating the list below as and when i go through any new material.
 - [OSdev wiki](https://wiki.osdev.org)
 - [A Journey in Creating an Operating System Kernel - The 539 Kernel Book](https://539kernel.com/)
 - [Making an OS (x86) - Daedalus Community](https://www.youtube.com/playlist?list=PLm3B56ql_akNcvH8vvJRYOc7TbYhRs19M)
+- [ThatOSDev Channel](https://www.youtube.com/playlist?list=PLwH94sFU_ljPi2ClIcWIvuc1GdLT81uuH) 
 
