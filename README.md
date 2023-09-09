@@ -1,4 +1,4 @@
-## Operating System and Kernel Development Notes
+## Operating System and Kernel Development Notes (WIP)
 - Repo with revision notes and collection of links to books, youtube tutorials, etc related to os and kernel development.
 - Please double check all info from this repo before any usage. Kindly send a pr for any corrections or suggestions.
 
